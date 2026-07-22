@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADATA CLOUD — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 50:'#fafafa',100:'#f5f5f5',200:'#e5e5e5',300:'#d4d4d4',400:'#a3a3a3',500:'#737373',600:'#525252',700:'#404040',800:'#262626',900:'#171717',950:'#0a0a0a' },
+                        accent: '#4F9DFF'
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#0a0a0a; color:#fff; overflow-x:hidden; }
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
+        ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.2); }
+
+        .login-bg {
+            min-height:100vh; display:flex; align-items:center; justify-content:center;
+            background: radial-gradient(ellipse at 30% 20%, rgba(79,157,255,0.06), transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(79,157,255,0.04), transparent 50%),
+                        #0a0a0a;
+        }
+
+        .glass-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+        }
+
+        .sidebar {
+            width: 260px; min-height:100vh; position:fixed; left:0; top:0;
+            background: rgba(10,10,10,0.95);
+            border-right: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            z-index: 50;
+            transition: transform 0.3s;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            padding: 24px 32px;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 16px; border-radius: 10px;
+            color: #737373; text-decoration: none;
+            font-size: 0.85rem; font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .nav-item.active { background: rgba(79,157,255,0.08); color: #4F9DFF; border: 1px solid rgba(79,157,255,0.15); }
+        .nav-item svg { width:18px; height:18px; stroke-width:1.5; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+        .stat-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .stat-card:hover { border-color: rgba(79,157,255,0.2); background: rgba(79,157,255,0.03); }
+
+        .btn-primary {
+            padding: 10px 20px; border-radius: 10px;
+            background: rgba(79,157,255,0.12); border: 1px solid rgba(79,157,255,0.25);
+            color: #fff; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary:hover { background: rgba(79,157,255,0.2); border-color: rgba(79,157,255,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0) scale(0.98); }
+
+        .btn-danger {
+            padding: 8px 16px; border-radius: 8px;
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+            color: #ef4444; font-size: 0.8rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+        .btn-ghost {
+            padding: 8px 16px; border-radius: 8px;
+            background: transparent; border: 1px solid rgba(255,255,255,0.08);
+            color: #a3a3a3; font-size: 0.8rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.04); color: #fff; }
+
+        .table-row {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.2s;
+        }
+        .table-row:hover { background: rgba(255,255,255,0.02); }
+
+        .modal-overlay {
+            position: fixed; inset:0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px); z-index: 100;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: #141414; border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; width: 100%; max-width: 560px;
+            max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+        }
+
+        .input-field {
+            width: 100%; padding: 10px 14px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px; color: #fff; font-size: 0.85rem;
+            outline: none; transition: border-color 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .input-field:focus { border-color: rgba(79,157,255,0.4); }
+        .input-field::placeholder { color: #525252; }
+
+        textarea.input-field { resize: vertical; min-height: 80px; }
+
+        .image-preview-box {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 8px;
+            margin-top: 8px; display: none;
+        }
+        .image-preview-box img { width: 100%; border-radius: 8px; display: block; }
+
+        .badge {
+            display: inline-flex; padding: 3px 10px;
+            border-radius: 100px; font-size: 0.7rem; font-weight: 600;
+        }
+        .badge-new { background: rgba(79,157,255,0.12); color: #4F9DFF; }
+        .badge-read { background: rgba(34,197,94,0.12); color: #22c55e; }
+        .badge-popular { background: rgba(168,85,247,0.12); color: #a855f7; }
+
+        .tag-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 100px;
+            background: rgba(79,157,255,0.08); border: 1px solid rgba(79,157,255,0.15);
+            font-size: 0.72rem; color: #4F9DFF;
+        }
+        .tag-pill button { background:none; border:none; color:#4F9DFF; cursor:pointer; font-size:0.8rem; line-height:1; opacity:0.6; }
+        .tag-pill button:hover { opacity:1; }
+
+        .section { display:none; }
+        .section.active { display:block; }
+
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 200;
+            padding: 14px 20px; border-radius: 12px;
+            background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25);
+            color: #22c55e; font-size: 0.85rem; font-weight: 500;
+            transform: translateY(100px); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(12px);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .toast-error {
+            background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25);
+            color: #ef4444;
+        }
+
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+            color: #525252;
+        }
+        .empty-state svg { width:48px; height:48px; margin:0 auto 16px; opacity:0.3; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== LOGIN SCREEN ========== -->
+<div id="loginScreen" class="login-bg">
+    <div class="glass-card p-8 w-full max-w-sm" style="background:rgba(20,20,20,0.8); border:1px solid rgba(255,255,255,0.08);">
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 mx-auto mb-4 rounded-xl flex items-center justify-center" style="background:rgba(79,157,255,0.1); border:1px solid rgba(79,157,255,0.2);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F9DFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold">Admin Panel</h1>
+            <p class="text-sm text-dark-400 mt-1">Sign in to manage your content</p>
+        </div>
+        <div id="loginError" class="hidden mb-4 p-3 rounded-lg text-sm" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#ef4444;"></div>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Email</label>
+                <input type="email" id="loginEmail" class="input-field" placeholder="admin@adatacloud.com" required>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Password</label>
+                <input type="password" id="loginPassword" class="input-field" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn-primary w-full justify-center py-3" id="loginBtn">
+                Sign In
+            </button>
+        </form>
+        <p class="text-center text-xs text-dark-500 mt-6">&copy; 2026 ADATA CLOUD</p>
+    </div>
+</div>
+
+<!-- ========== ADMIN PANEL ========== -->
+<div id="adminPanel" class="hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="p-5 border-b border-white/5">
+            <a href="index.html" class="flex items-center gap-2.5 text-white no-underline">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(79,157,255,0.12); border:1px solid rgba(79,157,255,0.2);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F9DFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                </div>
+                <span class="font-bold text-sm tracking-tight">ADATA <span class="text-accent">CLOUD</span></span>
+            </a>
+        </div>
+        <nav class="p-3 space-y-1">
+            <div class="nav-item active" onclick="showSection('dashboard', this)">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Dashboard
+            </div>
+            <div class="nav-item" onclick="showSection('projects', this)">
+                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                Projects
+            </div>
+            <div class="nav-item" onclick="showSection('services', this)">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                Services
+            </div>
+            <div class="nav-item" onclick="showSection('packages', this)">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                Packages
+            </div>
+            <div class="nav-item" onclick="showSection('testimonials', this)">
+                <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                Testimonials
+            </div>
+            <div class="nav-item" onclick="showSection('contacts', this)">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Contacts
+                <span class="ml-auto badge badge-new hidden" id="contactsBadge">0</span>
+            </div>
+        </nav>
+        <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-white/5">
+            <div class="flex items-center gap-3 px-3 py-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style="background:rgba(79,157,255,0.12); color:#4F9DFF;" id="userAvatar">A</div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-medium truncate" id="userEmail">admin@adatacloud.com</div>
+                </div>
+                <button onclick="logout()" class="text-dark-500 hover:text-red-400 transition-colors" title="Sign out">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile header -->
+    <div class="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3" style="background:rgba(10,10,10,0.95); border-bottom:1px solid rgba(255,255,255,0.06);">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="text-white p-1">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="font-bold text-sm">ADATA <span class="text-accent">CLOUD</span></span>
+        <button onclick="logout()" class="text-dark-400 p-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content pt-4 md:pt-0">
+
+        <!-- ===== DASHBOARD ===== -->
+        <div id="section-dashboard" class="section active">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">Dashboard</h1>
+                    <p class="text-sm text-dark-400 mt-1">Overview of your admin panel</p>
+                </div>
+                <a href="index.html" target="_blank" class="btn-ghost text-xs">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    View Site
+                </a>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="stat-card">
+                    <div class="text-2xl font-bold text-accent" id="statProjects">0</div>
+                    <div class="text-xs text-dark-400 mt-1">Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-2xl font-bold text-accent" id="statServices">0</div>
+                    <div class="text-xs text-dark-400 mt-1">Services</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-2xl font-bold text-accent" id="statTestimonials">0</div>
+                    <div class="text-xs text-dark-400 mt-1">Testimonials</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-2xl font-bold text-accent" id="statContacts">0</div>
+                    <div class="text-xs text-dark-400 mt-1">Inquiries</div>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <h3 class="font-semibold mb-4">Quick Actions</h3>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="showSection('projects'); setTimeout(function(){openProjectModal()},10)" class="btn-primary text-xs">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        New Project
+                    </button>
+                    <button onclick="showSection('services'); setTimeout(function(){openServiceModal()},10)" class="btn-primary text-xs">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        New Service
+                    </button>
+                    <button onclick="showSection('testimonials'); setTimeout(function(){openTestimonialModal()},10)" class="btn-primary text-xs">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        New Testimonial
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PROJECTS ===== -->
+        <div id="section-projects" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">Projects</h1>
+                    <p class="text-sm text-dark-400 mt-1">Manage your portfolio & client projects</p>
+                </div>
+                <button onclick="openProjectModal()" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Project
+                </button>
+            </div>
+            <div id="projectsList" class="space-y-4"></div>
+            <div id="projectsEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <p class="text-sm">No projects yet. Add your first project!</p>
+            </div>
+        </div>
+
+        <!-- ===== SERVICES ===== -->
+        <div id="section-services" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">Services</h1>
+                    <p class="text-sm text-dark-400 mt-1">Manage your service offerings</p>
+                </div>
+                <button onclick="openServiceModal()" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Service
+                </button>
+            </div>
+            <div id="servicesList" class="space-y-4"></div>
+            <div id="servicesEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                <p class="text-sm">No services yet. Add your first service!</p>
+            </div>
+        </div>
+
+        <!-- ===== PACKAGES ===== -->
+        <div id="section-packages" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">Packages</h1>
+                    <p class="text-sm text-dark-400 mt-1">Manage pricing plans</p>
+                </div>
+                <button onclick="openPackageModal()" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Package
+                </button>
+            </div>
+            <div id="packagesList" class="space-y-4"></div>
+            <div id="packagesEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                <p class="text-sm">No packages yet.</p>
+            </div>
+        </div>
+
+        <!-- ===== TESTIMONIALS ===== -->
+        <div id="section-testimonials" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">Testimonials</h1>
+                    <p class="text-sm text-dark-400 mt-1">Manage client reviews</p>
+                </div>
+                <button onclick="openTestimonialModal()" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Testimonial
+                </button>
+            </div>
+            <div id="testimonialsList" class="space-y-4"></div>
+            <div id="testimonialsEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                <p class="text-sm">No testimonials yet.</p>
+            </div>
+        </div>
+
+        <!-- ===== CONTACTS ===== -->
+        <div id="section-contacts" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">Contact Inquiries</h1>
+                    <p class="text-sm text-dark-400 mt-1">Messages from your contact form</p>
+                </div>
+            </div>
+            <div id="contactsList" class="space-y-3"></div>
+            <div id="contactsEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <p class="text-sm">No inquiries yet.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========== MODALS ========== -->
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="projectModal">
+    <div class="modal-content">
+        <div class="flex items-center justify-between p-5 border-b border-white/5">
+            <h2 class="font-semibold" id="projectModalTitle">Add Project</h2>
+            <button onclick="closeModal('projectModal')" class="text-dark-500 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form id="projectForm" class="p-5 space-y-4">
+            <input type="hidden" id="projectId">
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Project Title *</label>
+                <input type="text" id="projectTitle" class="input-field" placeholder="e.g. RetailMax ERP" required>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Description *</label>
+                <textarea id="projectDesc" class="input-field" placeholder="Brief description of the project..." required></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Category</label>
+                    <input type="text" id="projectCategory" class="input-field" placeholder="e.g. ERP, POS">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Order</label>
+                    <input type="number" id="projectOrder" class="input-field" placeholder="0" value="0">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Tags (press Enter to add)</label>
+                <div id="projectTagsContainer" class="flex flex-wrap gap-2 mb-2"></div>
+                <input type="text" id="projectTagInput" class="input-field" placeholder="e.g. ERP, POS, Inventory">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Image URL</label>
+                <input type="url" id="projectImageUrl" class="input-field" placeholder="https://example.com/image.jpg" oninput="previewProjectImage(this.value)">
+                <div class="image-preview-box" id="projectImagePreviewBox">
+                    <img id="projectImagePreview">
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Problem</label>
+                    <input type="text" id="projectProblem" class="input-field" placeholder="Client problem">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Solution</label>
+                    <input type="text" id="projectSolution" class="input-field" placeholder="Your solution">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Outcome</label>
+                    <input type="text" id="projectOutcome" class="input-field" placeholder="Result achieved">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn-primary flex-1 justify-center" id="projectSaveBtn">Save Project</button>
+                <button type="button" onclick="closeModal('projectModal')" class="btn-ghost">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Service Modal -->
+<div class="modal-overlay" id="serviceModal">
+    <div class="modal-content">
+        <div class="flex items-center justify-between p-5 border-b border-white/5">
+            <h2 class="font-semibold" id="serviceModalTitle">Add Service</h2>
+            <button onclick="closeModal('serviceModal')" class="text-dark-500 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form id="serviceForm" class="p-5 space-y-4">
+            <input type="hidden" id="serviceId">
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Service Title *</label>
+                <input type="text" id="serviceTitle" class="input-field" placeholder="e.g. ERP Software" required>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Description *</label>
+                <textarea id="serviceDesc" class="input-field" placeholder="What this service offers..." required></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Features (press Enter to add)</label>
+                <div id="serviceFeaturesContainer" class="flex flex-wrap gap-2 mb-2"></div>
+                <input type="text" id="serviceFeatureInput" class="input-field" placeholder="e.g. Real-time reporting">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Order</label>
+                <input type="number" id="serviceOrder" class="input-field" placeholder="0" value="0">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn-primary flex-1 justify-center">Save Service</button>
+                <button type="button" onclick="closeModal('serviceModal')" class="btn-ghost">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Package Modal -->
+<div class="modal-overlay" id="packageModal">
+    <div class="modal-content">
+        <div class="flex items-center justify-between p-5 border-b border-white/5">
+            <h2 class="font-semibold" id="packageModalTitle">Add Package</h2>
+            <button onclick="closeModal('packageModal')" class="text-dark-500 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form id="packageForm" class="p-5 space-y-4">
+            <input type="hidden" id="packageId">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Package Name *</label>
+                    <input type="text" id="packageName" class="input-field" placeholder="e.g. Starter" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Price *</label>
+                    <input type="text" id="packagePrice" class="input-field" placeholder="e.g. ৳9,999" required>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Period</label>
+                <input type="text" id="packagePeriod" class="input-field" placeholder="e.g. /month">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Features (press Enter to add)</label>
+                <div id="packageFeaturesContainer" class="flex flex-wrap gap-2 mb-2"></div>
+                <input type="text" id="packageFeatureInput" class="input-field" placeholder="e.g. Full ERP Suite">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Order</label>
+                    <input type="number" id="packageOrder" class="input-field" placeholder="0" value="0">
+                </div>
+                <div class="flex items-end pb-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="packagePopular" class="w-4 h-4 accent-accent rounded">
+                        <span class="text-sm text-dark-300">Popular</span>
+                    </label>
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn-primary flex-1 justify-center">Save Package</button>
+                <button type="button" onclick="closeModal('packageModal')" class="btn-ghost">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Testimonial Modal -->
+<div class="modal-overlay" id="testimonialModal">
+    <div class="modal-content">
+        <div class="flex items-center justify-between p-5 border-b border-white/5">
+            <h2 class="font-semibold" id="testimonialModalTitle">Add Testimonial</h2>
+            <button onclick="closeModal('testimonialModal')" class="text-dark-500 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form id="testimonialForm" class="p-5 space-y-4">
+            <input type="hidden" id="testimonialId">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Client Name *</label>
+                    <input type="text" id="testimonialName" class="input-field" placeholder="e.g. Rafiq Khan" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Role / Title</label>
+                    <input type="text" id="testimonialRole" class="input-field" placeholder="e.g. CEO">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Company</label>
+                <input type="text" id="testimonialCompany" class="input-field" placeholder="e.g. RetailMax Group">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Review Text *</label>
+                <textarea id="testimonialText" class="input-field" placeholder="What the client said..." required></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Rating (1-5)</label>
+                <input type="number" id="testimonialRating" class="input-field" min="1" max="5" value="5">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn-primary flex-1 justify-center">Save Testimonial</button>
+                <button type="button" onclick="closeModal('testimonialModal')" class="btn-ghost">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-content" style="max-width:400px;">
+        <div class="p-6 text-center">
+            <div class="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </div>
+            <h3 class="font-semibold mb-1">Delete Item?</h3>
+            <p class="text-sm text-dark-400 mb-6">This action cannot be undone.</p>
+            <div class="flex gap-3">
+                <button onclick="confirmDelete()" class="btn-danger flex-1 justify-center py-2.5">Delete</button>
+                <button onclick="closeModal('confirmModal')" class="btn-ghost flex-1 justify-center py-2.5">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== SCRIPTS ========== -->
+<script>
+// === FIREBASE CONFIG ===
+const firebaseConfig = {
+    apiKey: "AIzaSyBNR31WcAAt7qEaQ8nGptZ8HmB8J8ld6Bc",
+    authDomain: "adatacloudbd.firebaseapp.com",
+    projectId: "adatacloudbd",
+    storageBucket: "adatacloudbd.firebasestorage.app",
+    messagingSenderId: "264654223248",
+    appId: "1:264654223248:web:ac55094a25819dc6266515",
+    measurementId: "G-ZPS6HCS0HZ"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// === STATE ===
+let currentUser = null;
+let currentSection = 'dashboard';
+let deleteTarget = { collection: '', id: '' };
+let projectTags = [];
+let serviceFeatures = [];
+let packageFeatures = [];
+
+// === AUTH ===
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+    const errDiv = document.getElementById('loginError');
+
+    btn.textContent = 'Signing in...';
+    btn.disabled = true;
+    errDiv.classList.add('hidden');
+
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch(err) {
+        errDiv.textContent = err.message;
+        errDiv.classList.remove('hidden');
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
+    }
+});
+
+auth.onAuthStateChanged(function(user) {
+    if (user) {
+        currentUser = user;
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('userAvatar').textContent = (user.email || 'A').charAt(0).toUpperCase();
+        loadAllData();
+    } else {
+        currentUser = null;
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+    }
+});
+
+function logout() {
+    auth.signOut();
+}
+
+// === NAVIGATION ===
+function showSection(name, el) {
+    currentSection = name;
+    document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('section-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    else if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    document.getElementById('sidebar').classList.remove('open');
+}
+
+// === TOAST ===
+function showToast(msg, isError) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' toast-error' : '');
+    setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+// === MODAL ===
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// === IMAGE PREVIEW ===
+function previewProjectImage(url) {
+    var box = document.getElementById('projectImagePreviewBox');
+    var img = document.getElementById('projectImagePreview');
+    if (url && url.trim()) {
+        img.src = url;
+        box.style.display = 'block';
+        img.onerror = function() { box.style.display = 'none'; };
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+// === TAGS/FEATURES HELPERS ===
+function renderTags(containerId, tags, onRemove) {
+    var c = document.getElementById(containerId);
+    c.innerHTML = '';
+    tags.forEach(function(tag, i) {
+        var pill = document.createElement('span');
+        pill.className = 'tag-pill';
+        pill.innerHTML = tag + ' <button type="button" onclick="' + onRemove + '(' + i + ')">&times;</button>';
+        c.appendChild(pill);
+    });
+}
+
+function removeProjectTag(i) { projectTags.splice(i, 1); renderTags('projectTagsContainer', projectTags, 'removeProjectTag'); }
+function removeServiceFeature(i) { serviceFeatures.splice(i, 1); renderTags('serviceFeaturesContainer', serviceFeatures, 'removeServiceFeature'); }
+function removePackageFeature(i) { packageFeatures.splice(i, 1); renderTags('packageFeaturesContainer', packageFeatures, 'removePackageFeature'); }
+
+document.getElementById('projectTagInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); var v = this.value.trim(); if (v && !projectTags.includes(v)) { projectTags.push(v); renderTags('projectTagsContainer', projectTags, 'removeProjectTag'); } this.value = ''; }
+});
+document.getElementById('serviceFeatureInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); var v = this.value.trim(); if (v && !serviceFeatures.includes(v)) { serviceFeatures.push(v); renderTags('serviceFeaturesContainer', serviceFeatures, 'removeServiceFeature'); } this.value = ''; }
+});
+document.getElementById('packageFeatureInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); var v = this.value.trim(); if (v && !packageFeatures.includes(v)) { packageFeatures.push(v); renderTags('packageFeaturesContainer', packageFeatures, 'removePackageFeature'); } this.value = ''; }
+});
+
+// === PROJECTS CRUD ===
+function openProjectModal(data) {
+    projectTags = [];
+    document.getElementById('projectModalTitle').textContent = data ? 'Edit Project' : 'Add Project';
+    document.getElementById('projectId').value = data ? data.id : '';
+    document.getElementById('projectTitle').value = data ? data.title : '';
+    document.getElementById('projectDesc').value = data ? data.description : '';
+    document.getElementById('projectCategory').value = data ? data.category || '' : '';
+    document.getElementById('projectOrder').value = data ? data.order || 0 : 0;
+    document.getElementById('projectProblem').value = data ? data.problem || '' : '';
+    document.getElementById('projectSolution').value = data ? data.solution || '' : '';
+    document.getElementById('projectOutcome').value = data ? data.outcome || '' : '';
+    document.getElementById('projectImageUrl').value = data ? data.imageUrl || '' : '';
+    if (data && data.imageUrl) {
+        previewProjectImage(data.imageUrl);
+    } else {
+        document.getElementById('projectImagePreviewBox').style.display = 'none';
+    }
+    if (data && data.tags) { projectTags = [...data.tags]; }
+    renderTags('projectTagsContainer', projectTags, 'removeProjectTag');
+    openModal('projectModal');
+}
+
+document.getElementById('projectForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('projectId').value;
+    var title = document.getElementById('projectTitle').value.trim();
+    var desc = document.getElementById('projectDesc').value.trim();
+    if (!title || !desc) return;
+
+    var btn = document.getElementById('projectSaveBtn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    try {
+        var imageUrl = document.getElementById('projectImageUrl').value.trim();
+
+        var doc = {
+            title: title,
+            description: desc,
+            category: document.getElementById('projectCategory').value.trim(),
+            order: parseInt(document.getElementById('projectOrder').value) || 0,
+            tags: projectTags,
+            problem: document.getElementById('projectProblem').value.trim(),
+            solution: document.getElementById('projectSolution').value.trim(),
+            outcome: document.getElementById('projectOutcome').value.trim(),
+            imageUrl: imageUrl,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (id) {
+            await db.collection('projects').doc(id).update(doc);
+            showToast('Project updated!');
+        } else {
+            doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('projects').add(doc);
+            showToast('Project added!');
+        }
+
+        closeModal('projectModal');
+        loadProjects();
+    } catch(err) {
+        showToast('Error: ' + err.message, true);
+    }
+    btn.textContent = 'Save Project';
+    btn.disabled = false;
+});
+
+function loadProjects() {
+    db.collection('projects').onSnapshot(function(snap) {
+        var list = document.getElementById('projectsList');
+        var empty = document.getElementById('projectsEmpty');
+        document.getElementById('statProjects').textContent = snap.size;
+        if (snap.empty) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        var items = [];
+        snap.forEach(function(doc) { var d = doc.data(); d._id = doc.id; items.push(d); });
+        items.sort(function(a,b){ return (a.order||0) - (b.order||0); });
+        list.innerHTML = '';
+        items.forEach(function(p) {
+            var div = document.createElement('div');
+            div.className = 'glass-card p-4 flex gap-4 items-start';
+            div.innerHTML =
+                '<div class="w-24 h-16 rounded-lg overflow-hidden flex-shrink-0" style="background:rgba(255,255,255,0.03)">' +
+                    (p.imageUrl ? '<img src="' + p.imageUrl + '" class="w-full h-full object-cover" onerror="this.style.display=\'none\'">' : '<div class="w-full h-full flex items-center justify-center text-dark-600 text-xs">No Image</div>') +
+                '</div>' +
+                '<div class="flex-1 min-w-0">' +
+                    '<div class="flex items-start justify-between gap-3">' +
+                        '<div>' +
+                            '<h4 class="font-semibold text-sm">' + (p.title || '') + '</h4>' +
+                            '<p class="text-xs text-dark-400 mt-0.5 line-clamp-1">' + (p.description || '') + '</p>' +
+                        '</div>' +
+                        '<div class="flex gap-2 flex-shrink-0">' +
+                            '<button onclick="editProject(\'' + p._id + '\')" class="btn-ghost text-xs py-1.5 px-3">Edit</button>' +
+                            '<button onclick="deleteItem(\'projects\',\'' + p._id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex flex-wrap gap-1.5 mt-2">' +
+                        (p.category ? '<span class="tag-pill">' + p.category + '</span>' : '') +
+                        (p.tags || []).map(function(t) { return '<span class="tag-pill">' + t + '</span>'; }).join('') +
+                    '</div>' +
+                '</div>';
+            list.appendChild(div);
+        });
+    }, function(err) { console.error('Projects load error:', err); showToast('Error loading projects', true); });
+}
+
+async function editProject(id) {
+    var doc = await db.collection('projects').doc(id).get();
+    if (doc.exists) openProjectModal({ id: doc.id, ...doc.data() });
+}
+
+// === SERVICES CRUD ===
+function openServiceModal(data) {
+    serviceFeatures = [];
+    document.getElementById('serviceModalTitle').textContent = data ? 'Edit Service' : 'Add Service';
+    document.getElementById('serviceId').value = data ? data.id : '';
+    document.getElementById('serviceTitle').value = data ? data.title : '';
+    document.getElementById('serviceDesc').value = data ? data.description : '';
+    document.getElementById('serviceOrder').value = data ? data.order || 0 : 0;
+    if (data && data.features) { serviceFeatures = [...data.features]; }
+    renderTags('serviceFeaturesContainer', serviceFeatures, 'removeServiceFeature');
+    openModal('serviceModal');
+}
+
+document.getElementById('serviceForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('serviceId').value;
+    var title = document.getElementById('serviceTitle').value.trim();
+    var desc = document.getElementById('serviceDesc').value.trim();
+    if (!title || !desc) return;
+
+    try {
+        var doc = {
+            title: title,
+            description: desc,
+            features: serviceFeatures,
+            order: parseInt(document.getElementById('serviceOrder').value) || 0,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (id) {
+            await db.collection('services').doc(id).update(doc);
+            showToast('Service updated!');
+        } else {
+            doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('services').add(doc);
+            showToast('Service added!');
+        }
+        closeModal('serviceModal');
+        loadServices();
+    } catch(err) { showToast('Error: ' + err.message, true); }
+});
+
+function loadServices() {
+    db.collection('services').onSnapshot(function(snap) {
+        var list = document.getElementById('servicesList');
+        var empty = document.getElementById('servicesEmpty');
+        document.getElementById('statServices').textContent = snap.size;
+        if (snap.empty) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        var items = [];
+        snap.forEach(function(doc) { var d = doc.data(); d._id = doc.id; items.push(d); });
+        items.sort(function(a,b){ return (a.order||0) - (b.order||0); });
+        list.innerHTML = '';
+        items.forEach(function(s) {
+            var div = document.createElement('div');
+            div.className = 'glass-card p-4 flex gap-4 items-start';
+            div.innerHTML =
+                '<div class="flex-1">' +
+                    '<div class="flex items-start justify-between gap-3">' +
+                        '<div><h4 class="font-semibold text-sm">' + (s.title||'') + '</h4><p class="text-xs text-dark-400 mt-0.5 line-clamp-2">' + (s.description||'') + '</p></div>' +
+                        '<div class="flex gap-2 flex-shrink-0">' +
+                            '<button onclick="editService(\'' + s._id + '\')" class="btn-ghost text-xs py-1.5 px-3">Edit</button>' +
+                            '<button onclick="deleteItem(\'services\',\'' + s._id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex flex-wrap gap-1.5 mt-2">' +
+                        (s.features||[]).map(function(f){ return '<span class="tag-pill">'+f+'</span>'; }).join('') +
+                    '</div>' +
+                '</div>';
+            list.appendChild(div);
+        });
+    }, function(err) { console.error('Services load error:', err); showToast('Error loading services', true); });
+}
+
+async function editService(id) {
+    var doc = await db.collection('services').doc(id).get();
+    if (doc.exists) openServiceModal({ id: doc.id, ...doc.data() });
+}
+
+// === PACKAGES CRUD ===
+function openPackageModal(data) {
+    packageFeatures = [];
+    document.getElementById('packageModalTitle').textContent = data ? 'Edit Package' : 'Add Package';
+    document.getElementById('packageId').value = data ? data.id : '';
+    document.getElementById('packageName').value = data ? data.name : '';
+    document.getElementById('packagePrice').value = data ? data.price : '';
+    document.getElementById('packagePeriod').value = data ? data.period || '' : '';
+    document.getElementById('packageOrder').value = data ? data.order || 0 : 0;
+    document.getElementById('packagePopular').checked = data ? data.isPopular || false : false;
+    if (data && data.features) { packageFeatures = [...data.features]; }
+    renderTags('packageFeaturesContainer', packageFeatures, 'removePackageFeature');
+    openModal('packageModal');
+}
+
+document.getElementById('packageForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('packageId').value;
+    var name = document.getElementById('packageName').value.trim();
+    var price = document.getElementById('packagePrice').value.trim();
+    if (!name || !price) return;
+
+    try {
+        var doc = {
+            name: name,
+            price: price,
+            period: document.getElementById('packagePeriod').value.trim(),
+            features: packageFeatures,
+            isPopular: document.getElementById('packagePopular').checked,
+            order: parseInt(document.getElementById('packageOrder').value) || 0,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (id) {
+            await db.collection('packages').doc(id).update(doc);
+            showToast('Package updated!');
+        } else {
+            doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('packages').add(doc);
+            showToast('Package added!');
+        }
+        closeModal('packageModal');
+        loadPackages();
+    } catch(err) { showToast('Error: ' + err.message, true); }
+});
+
+function loadPackages() {
+    db.collection('packages').onSnapshot(function(snap) {
+        var list = document.getElementById('packagesList');
+        var empty = document.getElementById('packagesEmpty');
+        if (snap.empty) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        var items = [];
+        snap.forEach(function(doc) { var d = doc.data(); d._id = doc.id; items.push(d); });
+        items.sort(function(a,b){ return (a.order||0) - (b.order||0); });
+        list.innerHTML = '';
+        items.forEach(function(p) {
+            var div = document.createElement('div');
+            div.className = 'glass-card p-4 flex gap-4 items-start';
+            div.innerHTML =
+                '<div class="flex-1">' +
+                    '<div class="flex items-start justify-between gap-3">' +
+                        '<div>' +
+                            '<div class="flex items-center gap-2"><h4 class="font-semibold text-sm">' + (p.name||'') + '</h4>' + (p.isPopular ? '<span class="badge badge-popular">Popular</span>' : '') + '</div>' +
+                            '<p class="text-lg font-bold text-accent mt-1">' + (p.price||'') + ' <span class="text-xs font-normal text-dark-400">' + (p.period||'') + '</span></p>' +
+                        '</div>' +
+                        '<div class="flex gap-2 flex-shrink-0">' +
+                            '<button onclick="editPackage(\'' + p._id + '\')" class="btn-ghost text-xs py-1.5 px-3">Edit</button>' +
+                            '<button onclick="deleteItem(\'packages\',\'' + p._id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex flex-wrap gap-1.5 mt-2">' +
+                        (p.features||[]).map(function(f){ return '<span class="tag-pill">'+f+'</span>'; }).join('') +
+                    '</div>' +
+                '</div>';
+            list.appendChild(div);
+        });
+    }, function(err) { console.error('Packages load error:', err); showToast('Error loading packages', true); });
+}
+
+async function editPackage(id) {
+    var doc = await db.collection('packages').doc(id).get();
+    if (doc.exists) openPackageModal({ id: doc.id, ...doc.data() });
+}
+
+// === TESTIMONIALS CRUD ===
+function openTestimonialModal(data) {
+    document.getElementById('testimonialModalTitle').textContent = data ? 'Edit Testimonial' : 'Add Testimonial';
+    document.getElementById('testimonialId').value = data ? data.id : '';
+    document.getElementById('testimonialName').value = data ? data.name : '';
+    document.getElementById('testimonialRole').value = data ? data.role || '' : '';
+    document.getElementById('testimonialCompany').value = data ? data.company || '' : '';
+    document.getElementById('testimonialText').value = data ? data.text : '';
+    document.getElementById('testimonialRating').value = data ? data.rating || 5 : 5;
+    openModal('testimonialModal');
+}
+
+document.getElementById('testimonialForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('testimonialId').value;
+    var name = document.getElementById('testimonialName').value.trim();
+    var text = document.getElementById('testimonialText').value.trim();
+    if (!name || !text) return;
+
+    try {
+        var doc = {
+            name: name,
+            role: document.getElementById('testimonialRole').value.trim(),
+            company: document.getElementById('testimonialCompany').value.trim(),
+            text: text,
+            rating: parseInt(document.getElementById('testimonialRating').value) || 5,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (id) {
+            await db.collection('testimonials').doc(id).update(doc);
+            showToast('Testimonial updated!');
+        } else {
+            doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('testimonials').add(doc);
+            showToast('Testimonial added!');
+        }
+        closeModal('testimonialModal');
+        loadTestimonials();
+    } catch(err) { showToast('Error: ' + err.message, true); }
+});
+
+function loadTestimonials() {
+    db.collection('testimonials').onSnapshot(function(snap) {
+        var list = document.getElementById('testimonialsList');
+        var empty = document.getElementById('testimonialsEmpty');
+        document.getElementById('statTestimonials').textContent = snap.size;
+        if (snap.empty) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        list.innerHTML = '';
+        snap.forEach(function(doc) {
+            var t = doc.data();
+            var div = document.createElement('div');
+            div.className = 'glass-card p-4 flex gap-4 items-start';
+            var initials = (t.name||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+            div.innerHTML =
+                '<div class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(79,157,255,0.1); color:#4F9DFF;">' + initials + '</div>' +
+                '<div class="flex-1 min-w-0">' +
+                    '<div class="flex items-start justify-between gap-3">' +
+                        '<div>' +
+                            '<h4 class="font-semibold text-sm">' + (t.name||'') + '</h4>' +
+                            '<p class="text-xs text-dark-400">' + (t.role||'') + (t.company ? ', ' + t.company : '') + '</p>' +
+                        '</div>' +
+                        '<div class="flex gap-2 flex-shrink-0">' +
+                            '<button onclick="editTestimonial(\'' + doc.id + '\')" class="btn-ghost text-xs py-1.5 px-3">Edit</button>' +
+                            '<button onclick="deleteItem(\'testimonials\',\'' + doc.id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<p class="text-xs text-dark-300 mt-2 line-clamp-2">' + (t.text||'') + '</p>' +
+                    '<div class="text-xs text-yellow-400 mt-1">' + '\u2605'.repeat(t.rating||5) + '</div>' +
+                '</div>';
+            list.appendChild(div);
+        });
+    });
+}
+
+async function editTestimonial(id) {
+    var doc = await db.collection('testimonials').doc(id).get();
+    if (doc.exists) openTestimonialModal({ id: doc.id, ...doc.data() });
+}
+
+// === CONTACTS (Real-time + Notifications) ===
+var contactsFirstLoad = true;
+
+function playNotifSound() {
+    try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        osc.type = 'sine';
+        gain.gain.value = 0.15;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.stop(ctx.currentTime + 0.3);
+    } catch(e) {}
+}
+
+function loadContacts() {
+    db.collection('contacts').onSnapshot(function(snap) {
+        var list = document.getElementById('contactsList');
+        var empty = document.getElementById('contactsEmpty');
+        var badge = document.getElementById('contactsBadge');
+
+        var newCount = 0;
+        var items = [];
+        snap.forEach(function(doc) {
+            var d = doc.data();
+            d._id = doc.id;
+            if (d.status === 'new') newCount++;
+            items.push(d);
+        });
+        items.sort(function(a,b){
+            var ta = a.createdAt ? (typeof a.createdAt === 'string' ? a.createdAt : a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0) : 0;
+            var tb = b.createdAt ? (typeof b.createdAt === 'string' ? b.createdAt : b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0) : 0;
+            return tb - ta;
+        });
+
+        if (newCount > 0) {
+            badge.textContent = newCount;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+
+        document.getElementById('statContacts').textContent = snap.size;
+
+        if (snap.empty) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        list.innerHTML = '';
+        items.forEach(function(c) {
+            var div = document.createElement('div');
+            div.className = 'glass-card p-4';
+            var date = '';
+            if (c.createdAt) {
+                try { date = typeof c.createdAt === 'string' ? new Date(c.createdAt).toLocaleDateString() : (c.createdAt.toDate ? c.createdAt.toDate().toLocaleDateString() : ''); } catch(e) {}
+            }
+            div.innerHTML =
+                '<div class="flex items-start justify-between gap-3">' +
+                    '<div class="flex items-center gap-3">' +
+                        '<div class="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(79,157,255,0.08); color:#4F9DFF;">' + ((c.name||'?')[0]||'?').toUpperCase() + '</div>' +
+                        '<div>' +
+                            '<div class="flex items-center gap-2"><h4 class="font-semibold text-sm">' + (c.name||'') + '</h4><span class="badge ' + (c.status === 'new' ? 'badge-new' : 'badge-read') + '">' + (c.status || 'new') + '</span></div>' +
+                            '<p class="text-xs text-dark-400">' + (c.contact||c.email||'') + ' · ' + date + '</p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex gap-2">' +
+                        '<button onclick="markContact(\'' + c._id + '\',\'' + (c.status === 'new' ? 'read' : 'new') + '\')" class="btn-ghost text-xs py-1.5 px-3">' + (c.status === 'new' ? 'Mark Read' : 'Mark New') + '</button>' +
+                        '<button onclick="deleteItem(\'contacts\',\'' + c._id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
+                    '</div>' +
+                '</div>' +
+                (c.service ? '<div class="mt-2 ml-12"><span class="tag-pill">' + c.service + '</span></div>' : '') +
+                (c.message ? '<p class="text-xs text-dark-300 mt-2 ml-12 line-clamp-3">' + c.message + '</p>' : '');
+            list.appendChild(div);
+        });
+
+        // Notify on new messages (skip first load)
+        if (!contactsFirstLoad && newCount > 0) {
+            playNotifSound();
+            showToast('New message from ' + (items[0].name || 'someone') + '!');
+        }
+        contactsFirstLoad = false;
+    }, function(err) { console.error('Contacts load error:', err); showToast('Error loading contacts', true); });
+}
+
+async function markContact(id, status) {
+    try {
+        await db.collection('contacts').doc(id).update({ status: status });
+        showToast('Status updated!');
+    } catch(err) { showToast('Error: ' + err.message, true); }
+}
+
+// === DELETE ===
+function deleteItem(collection, id) {
+    deleteTarget = { collection: collection, id: id };
+    openModal('confirmModal');
+}
+
+async function confirmDelete() {
+    try {
+        await db.collection(deleteTarget.collection).doc(deleteTarget.id).delete();
+        showToast('Item deleted!');
+        closeModal('confirmModal');
+    } catch(err) { showToast('Error: ' + err.message, true); }
+}
+
+// === LOAD ALL ===
+function loadAllData() {
+    loadProjects();
+    loadServices();
+    loadPackages();
+    loadTestimonials();
+    loadContacts();
+}
+
+// Click outside modal to close
+document.querySelectorAll('.modal-overlay').forEach(function(m) {
+    m.addEventListener('click', function(e) {
+        if (e.target === m) m.classList.remove('active');
+    });
+});
+</script>
+</body>
+</html>
