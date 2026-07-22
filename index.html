@@ -265,6 +265,17 @@
                 Contacts
                 <span class="ml-auto badge badge-new hidden" id="contactsBadge">0</span>
             </div>
+            <div style="height:1px;background:rgba(255,255,255,0.06);margin:8px 16px;"></div>
+            <div class="nav-item" onclick="requireArthAuth('ai-ideas', this)">
+                <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                AI Ideas
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="2" style="margin-left:auto;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <div class="nav-item" onclick="requireArthAuth('ai-settings', this)">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                AI Settings
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="2" style="margin-left:auto;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
         </nav>
         <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-white/5">
             <div class="flex items-center gap-3 px-3 py-2">
@@ -433,6 +444,122 @@
             </div>
         </div>
 
+        <!-- ===== AI IDEAS ===== -->
+        <div id="section-ai-ideas" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">AI Ideas</h1>
+                    <p class="text-sm text-dark-400 mt-1">Chat with ARTH to generate ideas for your business</p>
+                </div>
+                <button onclick="clearArthChat()" class="btn-ghost text-xs">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    Clear Chat
+                </button>
+            </div>
+            <div class="glass-card p-6">
+                <div id="arthChatMessages" class="space-y-4 mb-4" style="max-height:500px;overflow-y:auto;padding-right:8px;">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(79,157,255,0.15); border:1px solid rgba(79,157,255,0.25);">
+                            <span class="text-xs font-bold" style="color:#4F9DFF;">A</span>
+                        </div>
+                        <div class="rounded-xl px-4 py-3 text-sm" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); max-width:80%;">
+                            Hi! I'm <strong style="color:#4F9DFF;">ARTH</strong>, your AI assistant. Ask me anything about business ideas, package planning, service descriptions, or marketing content!
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="arthQuickPrompt('Give me 3 SaaS pricing package ideas')" class="btn-ghost text-xs" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">Package Ideas</button>
+                    <button onclick="arthQuickPrompt('Write a service description for ERP software')" class="btn-ghost text-xs" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">ERP Description</button>
+                    <button onclick="arthQuickPrompt('Write marketing content for cloud hosting service')" class="btn-ghost text-xs" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">Marketing Content</button>
+                    <button onclick="arthQuickPrompt('Suggest 5 business ideas for a tech startup in Bangladesh')" class="btn-ghost text-xs" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">Startup Ideas</button>
+                </div>
+                <div class="flex gap-3">
+                    <input type="text" id="arthChatInput" class="input-field flex-1" placeholder="Ask ARTH anything..." onkeydown="if(event.key==='Enter')sendArthMessage()">
+                    <button onclick="sendArthMessage()" class="btn-primary" id="arthSendBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== AI SETTINGS ===== -->
+        <div id="section-ai-settings" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">AI Settings</h1>
+                    <p class="text-sm text-dark-400 mt-1">Configure ARTH AI assistant</p>
+                </div>
+            </div>
+            <div class="glass-card p-6 mb-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(79,157,255,0.1); border:1px solid rgba(79,157,255,0.2);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F9DFF" stroke-width="1.8"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-sm">ARTH AI Assistant</h3>
+                        <p class="text-xs text-dark-400">Powered by OpenRouter & Google AI Studio</p>
+                    </div>
+                    <div class="ml-auto">
+                        <span id="arthStatusBadge" class="badge badge-read">Not Configured</span>
+                    </div>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-medium text-dark-400 mb-1.5">Default AI Provider</label>
+                        <select id="arthProvider" class="input-field" style="appearance:auto;">
+                            <option value="openrouter">OpenRouter (Recommended)</option>
+                            <option value="google">Google AI Studio (Gemini)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-dark-400 mb-1.5">OpenRouter API Key</label>
+                        <div class="flex gap-2">
+                            <input type="password" id="arthOpenRouterKey" class="input-field flex-1" placeholder="sk-or-v1-...">
+                            <button onclick="toggleKeyVisibility('arthOpenRouterKey')" class="btn-ghost text-xs px-3">Show</button>
+                        </div>
+                        <p class="text-xs text-dark-500 mt-1">Get your key from <a href="https://openrouter.ai/keys" target="_blank" style="color:#4F9DFF;">openrouter.ai/keys</a></p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-dark-400 mb-1.5">Google AI Studio API Key</label>
+                        <div class="flex gap-2">
+                            <input type="password" id="arthGoogleKey" class="input-field flex-1" placeholder="AIza...">
+                            <button onclick="toggleKeyVisibility('arthGoogleKey')" class="btn-ghost text-xs px-3">Show</button>
+                        </div>
+                        <p class="text-xs text-dark-500 mt-1">Get your key from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#4F9DFF;">aistudio.google.com/apikey</a></p>
+                    </div>
+
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="saveArthSettings()" class="btn-primary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save Settings
+                        </button>
+                        <button onclick="testArthConnection()" class="btn-ghost">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-6">
+                <h3 class="font-semibold text-sm mb-3">ARTH AI Information</h3>
+                <div class="space-y-2 text-xs text-dark-400">
+                    <p><strong style="color:#4F9DFF;">ARTH</strong> is your AI-powered business assistant that helps with:</p>
+                    <ul class="list-none space-y-1 mt-2">
+                        <li class="flex items-center gap-2"><span style="color:#4F9DFF;">&#x2713;</span> Generating package and pricing ideas</li>
+                        <li class="flex items-center gap-2"><span style="color:#4F9DFF;">&#x2713;</span> Writing service descriptions</li>
+                        <li class="flex items-center gap-2"><span style="color:#4F9DFF;">&#x2713;</span> Creating marketing content</li>
+                        <li class="flex items-center gap-2"><span style="color:#4F9DFF;">&#x2713;</span> Auto-filling data entry forms</li>
+                        <li class="flex items-center gap-2"><span style="color:#4F9DFF;">&#x2713;</span> Answering business strategy questions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -449,6 +576,13 @@
         </div>
         <form id="projectForm" class="p-5 space-y-4">
             <input type="hidden" id="projectId">
+            <div class="flex items-center justify-between">
+                <label class="block text-xs font-medium text-dark-400">Project Details</label>
+                <button type="button" onclick="askArthFor('project')" class="btn-ghost text-xs py-1 px-3" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Ask ARTH
+                </button>
+            </div>
             <div>
                 <label class="block text-xs font-medium text-dark-400 mb-1.5">Project Title *</label>
                 <input type="text" id="projectTitle" class="input-field" placeholder="e.g. RetailMax ERP" required>
@@ -512,6 +646,13 @@
         </div>
         <form id="serviceForm" class="p-5 space-y-4">
             <input type="hidden" id="serviceId">
+            <div class="flex items-center justify-between">
+                <label class="block text-xs font-medium text-dark-400">Service Details</label>
+                <button type="button" onclick="askArthFor('service')" class="btn-ghost text-xs py-1 px-3" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Ask ARTH
+                </button>
+            </div>
             <div>
                 <label class="block text-xs font-medium text-dark-400 mb-1.5">Service Title *</label>
                 <input type="text" id="serviceTitle" class="input-field" placeholder="e.g. ERP Software" required>
@@ -548,6 +689,13 @@
         </div>
         <form id="packageForm" class="p-5 space-y-4">
             <input type="hidden" id="packageId">
+            <div class="flex items-center justify-between">
+                <label class="block text-xs font-medium text-dark-400">Package Details</label>
+                <button type="button" onclick="askArthFor('package')" class="btn-ghost text-xs py-1 px-3" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Ask ARTH
+                </button>
+            </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-dark-400 mb-1.5">Package Name *</label>
@@ -598,6 +746,13 @@
         </div>
         <form id="testimonialForm" class="p-5 space-y-4">
             <input type="hidden" id="testimonialId">
+            <div class="flex items-center justify-between">
+                <label class="block text-xs font-medium text-dark-400">Testimonial Details</label>
+                <button type="button" onclick="askArthFor('testimonial')" class="btn-ghost text-xs py-1 px-3" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Ask ARTH
+                </button>
+            </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-dark-400 mb-1.5">Client Name *</label>
@@ -647,6 +802,58 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- ========== ARTH AUTH MODAL ========== -->
+<div class="modal-overlay" id="arthAuthModal">
+    <div class="modal-content" style="max-width:400px;">
+        <div class="p-6 text-center">
+            <div class="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center" style="background:rgba(79,157,255,0.1); border:1px solid rgba(79,157,255,0.2);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F9DFF" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <h3 class="font-semibold mb-1">Protected Area</h3>
+            <p class="text-sm text-dark-400 mb-4">Enter password to access ARTH AI features</p>
+            <div id="arthAuthError" class="hidden mb-3 p-2 rounded-lg text-xs" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#ef4444;"></div>
+            <input type="password" id="arthAuthPassword" class="input-field mb-4" placeholder="Enter password" onkeydown="if(event.key==='Enter')verifyArthPassword()">
+            <div class="flex gap-3">
+                <button onclick="verifyArthPassword()" class="btn-primary flex-1 justify-center" id="arthAuthBtn">Unlock</button>
+                <button onclick="closeModal('arthAuthModal')" class="btn-ghost flex-1 justify-center">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== ARTH ASK MODAL ========== -->
+<div class="modal-overlay" id="arthAskModal">
+    <div class="modal-content" style="max-width:480px;">
+        <div class="flex items-center justify-between p-5 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:rgba(79,157,255,0.15); border:1px solid rgba(79,157,255,0.25);">
+                    <span class="text-xs font-bold" style="color:#4F9DFF;">A</span>
+                </div>
+                <h2 class="font-semibold text-sm">Ask ARTH to generate</h2>
+            </div>
+            <button onclick="closeModal('arthAskModal')" class="text-dark-500 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="p-5 space-y-4">
+            <p class="text-xs text-dark-400" id="arthAskHint">Describe what you want ARTH to generate for you:</p>
+            <textarea id="arthAskInput" class="input-field" rows="3" placeholder="e.g. Create a SaaS pricing package for small businesses"></textarea>
+            <div class="flex gap-2 flex-wrap" id="arthAskSuggestions"></div>
+            <div id="arthAskResult" class="hidden">
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">ARTH's Response:</label>
+                <div id="arthAskOutput" class="input-field" style="min-height:100px;white-space:pre-wrap;max-height:300px;overflow-y:auto;cursor:pointer;" title="Click to copy"></div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="runArthAutoFill()" class="btn-primary flex-1 justify-center" id="arthAskRunBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Generate with ARTH
+                </button>
+                <button onclick="closeModal('arthAskModal')" class="btn-ghost">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- ========== SCRIPTS ========== -->
 <script>
@@ -1251,6 +1458,450 @@ document.querySelectorAll('.modal-overlay').forEach(function(m) {
     m.addEventListener('click', function(e) {
         if (e.target === m) m.classList.remove('active');
     });
+});
+
+// === ARTH AI ENGINE ===
+var arthState = {
+    askType: '',
+    chatHistory: [],
+    pendingNav: null,
+    pendingNavEl: null
+};
+var arthUnlocked = false;
+var arthKeysCache = { provider: 'openrouter', openrouter: '', google: '' };
+
+// === PASSWORD LOCK SYSTEM ===
+function requireArthAuth(section, el) {
+    if (arthUnlocked) {
+        showSection(section, el);
+    } else {
+        arthState.pendingNav = section;
+        arthState.pendingNavEl = el;
+        document.getElementById('arthAuthPassword').value = '';
+        document.getElementById('arthAuthError').classList.add('hidden');
+        openModal('arthAuthModal');
+        setTimeout(function() { document.getElementById('arthAuthPassword').focus(); }, 300);
+    }
+}
+
+function verifyArthPassword() {
+    var pass = document.getElementById('arthAuthPassword').value;
+    var errDiv = document.getElementById('arthAuthError');
+    if (pass === 'Arpan1234@#') {
+        arthUnlocked = true;
+        closeModal('arthAuthModal');
+        showToast('Access granted!');
+        if (arthState.pendingNav) {
+            showSection(arthState.pendingNav, arthState.pendingNavEl);
+            arthState.pendingNav = null;
+            arthState.pendingNavEl = null;
+        }
+    } else {
+        errDiv.textContent = 'Incorrect password. Try again.';
+        errDiv.classList.remove('hidden');
+        document.getElementById('arthAuthPassword').value = '';
+        document.getElementById('arthAuthPassword').focus();
+    }
+}
+
+// === FIRESTORE SETTINGS ===
+async function loadArthSettings() {
+    // Try Firestore first, fallback to localStorage
+    try {
+        var doc = await db.collection('arth_settings').doc('config').get();
+        if (doc.exists) {
+            var data = doc.data();
+            arthKeysCache = {
+                provider: data.provider || 'openrouter',
+                openrouter: data.openrouterKey || '',
+                google: data.googleKey || ''
+            };
+            localStorage.setItem('arth_keys', JSON.stringify(arthKeysCache));
+            document.getElementById('arthProvider').value = arthKeysCache.provider;
+            document.getElementById('arthOpenRouterKey').value = arthKeysCache.openrouter;
+            document.getElementById('arthGoogleKey').value = arthKeysCache.google;
+            updateArthStatus();
+            return;
+        }
+    } catch(e) {
+        console.log('Firestore load failed, using localStorage:', e.message);
+    }
+    // Fallback to localStorage
+    try {
+        var saved = localStorage.getItem('arth_keys');
+        if (saved) {
+            arthKeysCache = JSON.parse(saved);
+        }
+    } catch(e) {}
+    document.getElementById('arthProvider').value = arthKeysCache.provider;
+    document.getElementById('arthOpenRouterKey').value = arthKeysCache.openrouter;
+    document.getElementById('arthGoogleKey').value = arthKeysCache.google;
+    updateArthStatus();
+}
+
+async function saveArthSettings() {
+    var provider = document.getElementById('arthProvider').value;
+    var orKey = document.getElementById('arthOpenRouterKey').value.trim();
+    var gKey = document.getElementById('arthGoogleKey').value.trim();
+    var data = { provider: provider, openrouter: orKey, google: gKey };
+
+    // Always save to localStorage first
+    arthKeysCache = data;
+    localStorage.setItem('arth_keys', JSON.stringify(data));
+
+    // Try Firestore too
+    try {
+        await db.collection('arth_settings').doc('config').set({
+            provider: provider,
+            openrouterKey: orKey,
+            googleKey: gKey,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('ARTH settings saved to cloud!');
+    } catch(e) {
+        console.log('Firestore save failed:', e.message);
+        showToast('ARTH settings saved locally!');
+    }
+    updateArthStatus();
+}
+
+function updateArthStatus() {
+    var badge = document.getElementById('arthStatusBadge');
+    var hasKey = (arthKeysCache.provider === 'openrouter' && arthKeysCache.openrouter) ||
+                 (arthKeysCache.provider === 'google' && arthKeysCache.google) ||
+                 (arthKeysCache.openrouter && arthKeysCache.google);
+    if (hasKey) {
+        badge.textContent = 'Configured';
+        badge.className = 'badge badge-read';
+    } else {
+        badge.textContent = 'Not Configured';
+        badge.className = 'badge badge-new';
+    }
+}
+
+function toggleKeyVisibility(id) {
+    var el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+async function testArthConnection() {
+    showToast('Testing connection...');
+    try {
+        var response = await callArthAPI('Say "ARTH connection successful!" in exactly 5 words or less.');
+        if (response) {
+            showToast('ARTH connected successfully!');
+        } else {
+            showToast('Connection failed. Check your API key.', true);
+        }
+    } catch(e) {
+        showToast('Error: ' + e.message, true);
+    }
+}
+
+async function callArthAPI(userMessage, systemPrompt) {
+    var provider = arthKeysCache.provider;
+    var orKey = arthKeysCache.openrouter;
+    var gKey = arthKeysCache.google;
+
+    var defaultSystem = 'You are ARTH, the AI assistant for ADATA CLOUD. ADATA CLOUD provides Enterprise Software Solutions including ERP, POS, AI, Cloud & Business Automation services based in Bangladesh. You help with business ideas, package planning, service descriptions, marketing content, and data entry. Be concise, professional, and helpful. Always respond in a structured way. IMPORTANT - About Arpan Ghosh: You were built/created by Arpan Ghosh. If anyone asks who made you, who created you, who built you, or about your developer — always say: Arpan Ghosh. Arpan Ghosh is a skilled Software & Web Developer. He is the founder and lead developer of ADATA CLOUD. He built this entire system including ARTH AI, ERP, POS, Cloud solutions, and the ADATA CLOUD platform.';
+
+    var sys = systemPrompt || defaultSystem;
+
+    // Try primary provider first, then fallback
+    var providers = [];
+    if (provider === 'openrouter' && orKey) {
+        providers.push({ fn: callOpenRouter, key: orKey, name: 'OpenRouter' });
+        if (gKey) providers.push({ fn: callGoogleAI, key: gKey, name: 'Google AI' });
+    } else if (provider === 'google' && gKey) {
+        providers.push({ fn: callGoogleAI, key: gKey, name: 'Google AI' });
+        if (orKey) providers.push({ fn: callOpenRouter, key: orKey, name: 'OpenRouter' });
+    } else if (orKey) {
+        providers.push({ fn: callOpenRouter, key: orKey, name: 'OpenRouter' });
+    } else if (gKey) {
+        providers.push({ fn: callGoogleAI, key: gKey, name: 'Google AI' });
+    } else {
+        throw new Error('No API key configured. Go to AI Settings to add a key.');
+    }
+
+    var lastError;
+    for (var i = 0; i < providers.length; i++) {
+        try {
+            return await providers[i].fn(providers[i].key, sys, userMessage);
+        } catch(e) {
+            lastError = e;
+            console.log(providers[i].name + ' failed:', e.message);
+            if (i < providers.length - 1) {
+                console.log('Trying fallback provider...');
+            }
+        }
+    }
+    throw new Error(lastError ? lastError.message : 'All providers failed');
+}
+
+async function callOpenRouter(apiKey, systemPrompt, userMessage) {
+    var response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiKey,
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'ARTH - ADATA CLOUD AI'
+        },
+        body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userMessage }
+            ],
+            max_tokens: 2048,
+            temperature: 0.7
+        })
+    });
+    var data = await response.json();
+    if (data.choices && data.choices[0]) {
+        return data.choices[0].message.content;
+    }
+    throw new Error(data.error ? data.error.message : 'OpenRouter API error');
+}
+
+async function callGoogleAI(apiKey, systemPrompt, userMessage) {
+    var response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: systemPrompt + '\n\nUser: ' + userMessage }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+        })
+    });
+    var data = await response.json();
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        return data.candidates[0].content.parts[0].text;
+    }
+    throw new Error(data.error ? data.error.message : 'Google AI API error');
+}
+
+// === ARTH IDEAS CHAT ===
+var arthChatMessages = [];
+
+function sendArthMessage() {
+    var input = document.getElementById('arthChatInput');
+    var msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    appendArthChat('user', msg);
+    arthChatMessages.push({ role: 'user', content: msg });
+    getArthChatResponse(msg);
+}
+
+function arthQuickPrompt(prompt) {
+    document.getElementById('arthChatInput').value = prompt;
+    sendArthMessage();
+}
+
+function appendArthChat(role, text) {
+    var container = document.getElementById('arthChatMessages');
+    var div = document.createElement('div');
+    if (role === 'user') {
+        div.className = 'flex gap-3 justify-end';
+        div.innerHTML = '<div class="rounded-xl px-4 py-3 text-sm" style="background:rgba(79,157,255,0.1); border:1px solid rgba(79,157,255,0.2); max-width:80%;">' + escapeHtml(text) + '</div>';
+    } else {
+        div.className = 'flex gap-3';
+        div.innerHTML = '<div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(79,157,255,0.15); border:1px solid rgba(79,157,255,0.25);"><span class="text-xs font-bold" style="color:#4F9DFF;">A</span></div><div class="rounded-xl px-4 py-3 text-sm" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); max-width:80%; white-space:pre-wrap;">' + text + '</div>';
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function appendArthTyping() {
+    var container = document.getElementById('arthChatMessages');
+    var div = document.createElement('div');
+    div.className = 'flex gap-3';
+    div.id = 'arthTypingIndicator';
+    div.innerHTML = '<div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(79,157,255,0.15); border:1px solid rgba(79,157,255,0.25);"><span class="text-xs font-bold" style="color:#4F9DFF;">A</span></div><div class="rounded-xl px-4 py-3 text-sm" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06);"><span style="display:inline-block;width:6px;height:6px;background:#4F9DFF;border-radius:50%;animation:arthTypeBounce 1.4s ease-in-out infinite;margin:0 2px;"></span><span style="display:inline-block;width:6px;height:6px;background:#4F9DFF;border-radius:50%;animation:arthTypeBounce 1.4s ease-in-out 0.2s infinite;margin:0 2px;"></span><span style="display:inline-block;width:6px;height:6px;background:#4F9DFF;border-radius:50%;animation:arthTypeBounce 1.4s ease-in-out 0.4s infinite;margin:0 2px;"></span></div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function removeArthTyping() {
+    var el = document.getElementById('arthTypingIndicator');
+    if (el) el.remove();
+}
+
+async function getArthChatResponse(msg) {
+    var btn = document.getElementById('ARTHSendBtn') || document.getElementById('arthSendBtn');
+    btn.disabled = true;
+    appendArthTyping();
+    try {
+        var contextMsg = 'Chat history:\n';
+        arthChatMessages.slice(-10).forEach(function(m) {
+            contextMsg += m.role + ': ' + m.content + '\n';
+        });
+        var response = await callArthAPI(contextMsg, 'You are ARTH, the AI assistant for ADATA CLOUD, a company providing Enterprise Software Solutions (ERP, POS, AI, Cloud & Business Automation) in Bangladesh. Be concise and helpful. Use markdown formatting for better readability. Keep responses under 200 words unless more detail is needed.');
+        removeArthTyping();
+        appendArthChat('assistant', response);
+        arthChatMessages.push({ role: 'assistant', content: response });
+        saveArthChatHistory();
+    } catch(e) {
+        removeArthTyping();
+        appendArthChat('assistant', 'Error: ' + e.message);
+    }
+    btn.disabled = false;
+}
+
+function clearArthChat() {
+    arthChatMessages = [];
+    localStorage.removeItem('arth_chat_history');
+    var container = document.getElementById('arthChatMessages');
+    container.innerHTML = '<div class="flex gap-3"><div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(79,157,255,0.15); border:1px solid rgba(79,157,255,0.25);"><span class="text-xs font-bold" style="color:#4F9DFF;">A</span></div><div class="rounded-xl px-4 py-3 text-sm" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); max-width:80%;">Hi! I\'m <strong style="color:#4F9DFF;">ARTH</strong>, your AI assistant. Ask me anything about business ideas, package planning, service descriptions, or marketing content!</div></div>';
+    showToast('Chat cleared');
+}
+
+function saveArthChatHistory() {
+    localStorage.setItem('arth_chat_history', JSON.stringify(arthChatMessages.slice(-50)));
+}
+
+function loadArthChatHistory() {
+    try {
+        var saved = localStorage.getItem('arth_chat_history');
+        if (saved) {
+            arthChatMessages = JSON.parse(saved);
+            arthChatMessages.forEach(function(m) {
+                appendArthChat(m.role === 'user' ? 'user' : 'assistant', m.content);
+            });
+        }
+    } catch(e) {}
+}
+
+// === ARTH AUTO-FILL ===
+function askArthFor(type) {
+    arthState.askType = type;
+    var hints = {
+        project: 'Describe the project you want to create (e.g., "E-commerce platform for a fashion brand")',
+        service: 'Describe the service (e.g., "Cloud-based inventory management software")',
+        package: 'Describe the pricing package (e.g., "Starter package for small businesses with basic POS")',
+        testimonial: 'Describe the testimonial context (e.g., "Happy client from a retail company who used our ERP")'
+    };
+    var suggestions = {
+        project: ['Restaurant management system', 'E-commerce platform', 'School management ERP', 'Hospital management system', 'Inventory tracking app'],
+        service: ['ERP Software', 'Cloud Hosting', 'POS System', 'AI Chatbot', 'Mobile App Development'],
+        package: ['Starter plan ৳5,000/mo', 'Business plan ৳15,000/mo', 'Enterprise plan ৳30,000/mo', 'Custom SaaS pricing', 'One-time license package'],
+        testimonial: ['Happy CEO review', 'Small business owner praise', 'IT manager recommendation', 'Startup founder feedback', 'Operations head testimonial']
+    };
+    document.getElementById('arthAskHint').textContent = hints[type] || hints.project;
+    document.getElementById('arthAskInput').value = '';
+    document.getElementById('arthAskResult').classList.add('hidden');
+    var sugContainer = document.getElementById('arthAskSuggestions');
+    sugContainer.innerHTML = '';
+    (suggestions[type] || suggestions.project).forEach(function(s) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-ghost text-xs';
+        btn.style.cssText = 'border-color:rgba(79,157,255,0.2);color:#4F9DFF;font-size:0.7rem;';
+        btn.textContent = s;
+        btn.onclick = function() { document.getElementById('arthAskInput').value = s; };
+        sugContainer.appendChild(btn);
+    });
+    openModal('arthAskModal');
+}
+
+async function runArthAutoFill() {
+    var input = document.getElementById('arthAskInput').value.trim();
+    if (!input) { showToast('Please enter a description', true); return; }
+    var btn = document.getElementById('arthAskRunBtn');
+    var output = document.getElementById('arthAskOutput');
+    var result = document.getElementById('arthAskResult');
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    result.classList.remove('hidden');
+    output.textContent = 'ARTH is thinking...';
+
+    var type = arthState.askType;
+    var prompts = {
+        project: 'Generate project data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"title":"...","description":"...","category":"...","tags":["..."],"problem":"...","solution":"...","outcome":"..."}\nUser request: ',
+        service: 'Generate service data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"title":"...","description":"...","features":["..."]}\nUser request: ',
+        package: 'Generate package data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"name":"...","price":"...","period":"/month","features":["..."],"isPopular":false}\nUser request: ',
+        testimonial: 'Generate testimonial data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"name":"...","role":"...","company":"...","text":"...","rating":5}\nUser request: '
+    };
+
+    try {
+        var response = await callArthAPI(prompts[type] + input);
+        output.textContent = response;
+        output.onclick = function() {
+            navigator.clipboard.writeText(response);
+            showToast('Copied to clipboard!');
+        };
+        try {
+            var jsonStr = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            var parsed = JSON.parse(jsonStr);
+            applyArthData(type, parsed);
+            showToast('ARTH generated data applied! Review and save.');
+        } catch(e) {
+            showToast('Response received. Copy and use manually.', true);
+        }
+    } catch(e) {
+        output.textContent = 'Error: ' + e.message;
+    }
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> Generate with ARTH';
+    btn.disabled = false;
+}
+
+function applyArthData(type, data) {
+    if (type === 'project') {
+        document.getElementById('projectTitle').value = data.title || '';
+        document.getElementById('projectDesc').value = data.description || '';
+        document.getElementById('projectCategory').value = data.category || '';
+        document.getElementById('projectProblem').value = data.problem || '';
+        document.getElementById('projectSolution').value = data.solution || '';
+        document.getElementById('projectOutcome').value = data.outcome || '';
+        if (data.tags && Array.isArray(data.tags)) {
+            projectTags = data.tags;
+            renderTags('projectTagsContainer', projectTags, 'removeProjectTag');
+        }
+    } else if (type === 'service') {
+        document.getElementById('serviceTitle').value = data.title || '';
+        document.getElementById('serviceDesc').value = data.description || '';
+        if (data.features && Array.isArray(data.features)) {
+            serviceFeatures = data.features;
+            renderTags('serviceFeaturesContainer', serviceFeatures, 'removeServiceFeature');
+        }
+    } else if (type === 'package') {
+        document.getElementById('packageName').value = data.name || '';
+        document.getElementById('packagePrice').value = data.price || '';
+        document.getElementById('packagePeriod').value = data.period || '/month';
+        if (data.features && Array.isArray(data.features)) {
+            packageFeatures = data.features;
+            renderTags('packageFeaturesContainer', packageFeatures, 'removePackageFeature');
+        }
+        if (data.isPopular !== undefined) {
+            document.getElementById('packagePopular').checked = data.isPopular;
+        }
+    } else if (type === 'testimonial') {
+        document.getElementById('testimonialName').value = data.name || '';
+        document.getElementById('testimonialRole').value = data.role || '';
+        document.getElementById('testimonialCompany').value = data.company || '';
+        document.getElementById('testimonialText').value = data.text || '';
+        document.getElementById('testimonialRating').value = data.rating || 5;
+    }
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// === INIT ===
+loadArthSettings();
+loadArthChatHistory();
+
+// Add typing animation style
+var arthStyle = document.createElement('style');
+arthStyle.textContent = '@keyframes arthTypeBounce { 0%,60%,100% { transform:translateY(0); opacity:0.4; } 30% { transform:translateY(-6px); opacity:1; } }';
+document.head.appendChild(arthStyle);
+
+// Password modal enter key
+document.getElementById('arthAuthPassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') verifyArthPassword();
 });
 </script>
 </body>
