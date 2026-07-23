@@ -265,6 +265,10 @@
                 Contacts
                 <span class="ml-auto badge badge-new hidden" id="contactsBadge">0</span>
             </div>
+            <div class="nav-item" onclick="showSection('demos', this)">
+                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                Demo Software
+            </div>
             <div style="height:1px;background:rgba(255,255,255,0.06);margin:8px 16px;"></div>
             <div class="nav-item" onclick="requireArthAuth('ai-ideas', this)">
                 <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
@@ -441,6 +445,97 @@
             <div id="contactsEmpty" class="empty-state hidden">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 <p class="text-sm">No inquiries yet.</p>
+            </div>
+        </div>
+
+        <!-- ===== DEMO SOFTWARE ===== -->
+        <div id="section-demos" class="section">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">Demo Software</h1>
+                    <p class="text-sm text-dark-400 mt-1">Manage demo software shown on your website</p>
+                </div>
+                <button onclick="openDemoModal()" class="btn-primary text-xs">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Demo
+                </button>
+            </div>
+            <div id="demosList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div id="demosEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <p class="text-sm">No demo software added yet.</p>
+            </div>
+        </div>
+
+        <!-- Demo Modal -->
+        <div id="demoModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="flex items-center justify-between p-5 border-b border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.2);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        </div>
+                        <h2 class="font-semibold" id="demoModalTitle">Add Demo Software</h2>
+                    </div>
+                    <button onclick="closeModal('demoModal')" class="text-dark-500 hover:text-white transition-colors">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <form id="demoForm" class="p-5 space-y-5" onsubmit="event.preventDefault(); saveDemo();">
+                    <input type="hidden" id="demoEditId">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-dark-400">Demo Details</label>
+                        <button type="button" onclick="askArthFor('demo')" class="btn-ghost text-xs py-1 px-3" style="border-color:rgba(79,157,255,0.2);color:#4F9DFF;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            Ask ARTH
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-dark-400 mb-1.5">Demo Title *</label>
+                        <input type="text" id="demoTitle" class="input-field" placeholder="e.g. ERP System, POS Software" required>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-dark-400 mb-1.5">Image URL</label>
+                            <input type="url" id="demoImage" class="input-field" placeholder="https://example.com/image.jpg" oninput="previewDemoImage(this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-dark-400 mb-1.5">Demo Link URL</label>
+                            <input type="url" id="demoLink" class="input-field" placeholder="https://demo.example.com">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-medium text-dark-400">Image Preview</label>
+                            <span id="demoPreviewHint" class="text-xs text-dark-500 hidden">Paste an image URL above</span>
+                        </div>
+                        <div id="demoImagePreviewBox" class="image-preview-box hidden">
+                            <img id="demoImagePreview" class="w-full h-40 object-cover rounded-lg border border-white/10">
+                            <div class="flex items-center justify-between mt-2 px-1">
+                                <span class="text-xs text-dark-400">Preview</span>
+                                <span class="text-xs text-green-400 flex items-center gap-1">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Image loaded
+                                </span>
+                            </div>
+                        </div>
+                        <div id="demoImageEmpty" class="rounded-xl border border-dashed border-white/10 p-6 text-center" style="background:rgba(255,255,255,0.02);">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="1.5" style="margin:0 auto 8px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <p class="text-xs text-dark-500">No image set — paste a URL above to preview</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-dark-400 mb-1.5">Description</label>
+                        <textarea id="demoDesc" class="input-field" rows="3" placeholder="Brief description of what this demo shows..."></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-2 border-t border-white/5">
+                        <button type="submit" class="btn-primary flex-1 justify-center" id="demoSaveBtn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save Demo
+                        </button>
+                        <button type="button" onclick="closeModal('demoModal')" class="btn-ghost">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -1430,6 +1525,92 @@ async function markContact(id, status) {
     } catch(err) { showToast('Error: ' + err.message, true); }
 }
 
+// === DEMO SOFTWARE ===
+function previewDemoImage(url) {
+    var box = document.getElementById('demoImagePreviewBox');
+    var empty = document.getElementById('demoImageEmpty');
+    var img = document.getElementById('demoImagePreview');
+    if (url) { img.src = url; box.classList.remove('hidden'); empty.classList.add('hidden'); }
+    else { box.classList.add('hidden'); empty.classList.remove('hidden'); }
+}
+
+function openDemoModal(id) {
+    document.getElementById('demoEditId').value = '';
+    document.getElementById('demoTitle').value = '';
+    document.getElementById('demoImage').value = '';
+    document.getElementById('demoLink').value = '';
+    document.getElementById('demoDesc').value = '';
+    document.getElementById('demoImagePreviewBox').classList.add('hidden');
+    document.getElementById('demoImageEmpty').classList.remove('hidden');
+    document.getElementById('demoModalTitle').textContent = 'Add Demo Software';
+    if (id) {
+        db.collection('arth_demos').doc(id).get().then(function(doc) {
+            if (doc.exists) {
+                var d = doc.data();
+                document.getElementById('demoEditId').value = id;
+                document.getElementById('demoTitle').value = d.title || '';
+                document.getElementById('demoImage').value = d.image || '';
+                document.getElementById('demoLink').value = d.link || '';
+                document.getElementById('demoDesc').value = d.description || '';
+                document.getElementById('demoModalTitle').textContent = 'Edit Demo Software';
+                if (d.image) previewDemoImage(d.image);
+            }
+        });
+    }
+    openModal('demoModal');
+}
+
+async function saveDemo() {
+    var id = document.getElementById('demoEditId').value;
+    var title = document.getElementById('demoTitle').value.trim();
+    var image = document.getElementById('demoImage').value.trim();
+    var link = document.getElementById('demoLink').value.trim();
+    var desc = document.getElementById('demoDesc').value.trim();
+    if (!title) { showToast('Title is required', true); return; }
+    var data = { title: title, image: image, link: link, description: desc, updatedAt: new Date().toISOString() };
+    try {
+        if (id) {
+            await db.collection('arth_demos').doc(id).update(data);
+            showToast('Demo updated successfully!');
+        } else {
+            data.createdAt = new Date().toISOString();
+            await db.collection('arth_demos').add(data);
+            showToast('Demo added successfully!');
+        }
+        closeModal('demoModal');
+    } catch(err) { showToast('Error: ' + err.message, true); }
+}
+
+function loadDemos() {
+    db.collection('arth_demos').onSnapshot(function(snap) {
+        var list = document.getElementById('demosList');
+        var empty = document.getElementById('demosEmpty');
+        if (snap.empty) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        list.innerHTML = '';
+        snap.forEach(function(doc) {
+            var d = doc.data();
+            d._id = doc.id;
+            var card = document.createElement('div');
+            card.className = 'glass-card overflow-hidden';
+            card.innerHTML =
+                '<div class="relative">' +
+                    (d.image ? '<img src="' + d.image + '" alt="' + (d.title||'') + '" class="w-full h-40 object-cover">' : '<div class="w-full h-40 flex items-center justify-center" style="background:rgba(79,157,255,0.06);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4F9DFF" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>') +
+                    '<div class="p-4">' +
+                        '<h4 class="font-semibold text-sm mb-1">' + (d.title||'Untitled') + '</h4>' +
+                        (d.description ? '<p class="text-xs text-dark-400 line-clamp-2 mb-3">' + d.description + '</p>' : '') +
+                        (d.link ? '<p class="text-xs text-accent truncate mb-3">' + d.link + '</p>' : '') +
+                        '<div class="flex gap-2">' +
+                            '<button onclick="openDemoModal(\'' + d._id + '\')" class="btn-ghost text-xs py-1.5 px-3 flex-1">Edit</button>' +
+                            '<button onclick="deleteItem(\'arth_demos\',\'' + d._id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            list.appendChild(card);
+        });
+    }, function(err) { console.error('Demos load error:', err); });
+}
+
 // === DELETE ===
 function deleteItem(collection, id) {
     deleteTarget = { collection: collection, id: id };
@@ -1451,6 +1632,7 @@ function loadAllData() {
     loadPackages();
     loadTestimonials();
     loadContacts();
+    loadDemos();
 }
 
 // Click outside modal to close
@@ -1779,13 +1961,15 @@ function askArthFor(type) {
         project: 'Describe the project you want to create (e.g., "E-commerce platform for a fashion brand")',
         service: 'Describe the service (e.g., "Cloud-based inventory management software")',
         package: 'Describe the pricing package (e.g., "Starter package for small businesses with basic POS")',
-        testimonial: 'Describe the testimonial context (e.g., "Happy client from a retail company who used our ERP")'
+        testimonial: 'Describe the testimonial context (e.g., "Happy client from a retail company who used our ERP")',
+        demo: 'Describe the demo software (e.g., "ERP dashboard with inventory and sales modules")'
     };
     var suggestions = {
         project: ['Restaurant management system', 'E-commerce platform', 'School management ERP', 'Hospital management system', 'Inventory tracking app'],
         service: ['ERP Software', 'Cloud Hosting', 'POS System', 'AI Chatbot', 'Mobile App Development'],
         package: ['Starter plan ৳5,000/mo', 'Business plan ৳15,000/mo', 'Enterprise plan ৳30,000/mo', 'Custom SaaS pricing', 'One-time license package'],
-        testimonial: ['Happy CEO review', 'Small business owner praise', 'IT manager recommendation', 'Startup founder feedback', 'Operations head testimonial']
+        testimonial: ['Happy CEO review', 'Small business owner praise', 'IT manager recommendation', 'Startup founder feedback', 'Operations head testimonial'],
+        demo: ['ERP Dashboard Demo', 'POS System Demo', 'Inventory Management Demo', 'CRM Software Demo', 'HR Management Demo']
     };
     document.getElementById('arthAskHint').textContent = hints[type] || hints.project;
     document.getElementById('arthAskInput').value = '';
@@ -1820,7 +2004,8 @@ async function runArthAutoFill() {
         project: 'Generate project data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"title":"...","description":"...","category":"...","tags":["..."],"problem":"...","solution":"...","outcome":"..."}\nUser request: ',
         service: 'Generate service data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"title":"...","description":"...","features":["..."]}\nUser request: ',
         package: 'Generate package data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"name":"...","price":"...","period":"/month","features":["..."],"isPopular":false}\nUser request: ',
-        testimonial: 'Generate testimonial data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"name":"...","role":"...","company":"...","text":"...","rating":5}\nUser request: '
+        testimonial: 'Generate testimonial data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"name":"...","role":"...","company":"...","text":"...","rating":5}\nUser request: ',
+        demo: 'Generate demo software data in this exact JSON format only (no markdown, no code blocks, just raw JSON): {"title":"...","description":"...","image":"...","link":"..."}\nUser request: '
     };
 
     try {
@@ -1881,6 +2066,12 @@ function applyArthData(type, data) {
         document.getElementById('testimonialCompany').value = data.company || '';
         document.getElementById('testimonialText').value = data.text || '';
         document.getElementById('testimonialRating').value = data.rating || 5;
+    } else if (type === 'demo') {
+        document.getElementById('demoTitle').value = data.title || '';
+        document.getElementById('demoDesc').value = data.description || '';
+        document.getElementById('demoImage').value = data.image || '';
+        document.getElementById('demoLink').value = data.link || '';
+        if (data.image) previewDemoImage(data.image);
     }
 }
 
