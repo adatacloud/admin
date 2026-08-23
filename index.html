@@ -32,6 +32,16 @@
         .ios-slider:before { content:''; position:absolute; height:22px; width:22px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.3s cubic-bezier(.4,0,.2,1); box-shadow:0 1px 3px rgba(0,0,0,.35); }
         .ios-switch:checked + .ios-slider { background:#34c759; }
         .ios-switch:checked + .ios-slider:before { transform:translateX(18px); }
+
+        /* Invoice Print Style */
+        .accent-swatch { width:26px; height:26px; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+        .accent-swatch:hover { transform:scale(1.14); }
+        .accent-swatch.active { border-color:#fff; box-shadow:0 0 0 2px rgba(79,157,255,0.6); }
+        .fw-wrap { display:inline-flex; border-radius:10px; border:1px solid rgba(255,255,255,0.08); overflow:hidden; }
+        .fw-btn { padding:7px 18px; font-size:12px; color:#9a9aa0; background:transparent; border:none; cursor:pointer; transition:background .15s ease, color .15s ease; }
+        .fw-btn:hover { color:#e5e5e7; }
+        .fw-btn.active { background:rgba(79,157,255,0.15); color:#4F9DFF; font-weight:600; }
+        .fw-btn + .fw-btn { border-left:1px solid rgba(255,255,255,0.08); }
         ::-webkit-scrollbar { width:6px; }
         ::-webkit-scrollbar-track { background:transparent; }
         ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
@@ -77,6 +87,13 @@
         .nav-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
         .nav-item.active { background: rgba(79,157,255,0.08); color: #4F9DFF; border: 1px solid rgba(79,157,255,0.15); }
         .nav-item svg { width:18px; height:18px; stroke-width:1.5; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+        /* Sidebar nav vertical scroll */
+        #sidebar nav { overflow-y:auto; max-height:calc(100vh - 140px); scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.15) transparent; }
+        #sidebar nav::-webkit-scrollbar { width:5px; }
+        #sidebar nav::-webkit-scrollbar-track { background:transparent; }
+        #sidebar nav::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:3px; }
+        #sidebar nav::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.3); }
 
         /* === SIDEBAR COLLAPSE (pin) === */
         #sidebarCollapseBtn {
@@ -244,15 +261,17 @@
         }
 
         /* Invoice print styles */
-        #invoicePrintArea { font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; padding:32px; color:#111; }
+        #invoicePrintArea, #reportPrintArea { font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; padding:32px; color:#111; }
+        #printRoot { display:none; }
         @media print {
-            body * { visibility:hidden !important; }
-            #invoicePrintArea, #invoicePrintArea * { visibility:visible !important; }
-            #invoicePrintArea { position:absolute !important; left:0; top:0; width:100%; padding:24px; }
-            .modal-overlay { position:static !important; background:none !important; backdrop-filter:none !important; display:block !important; padding:0 !important; overflow:visible !important; }
-            .modal-content { box-shadow:none !important; border:none !important; max-width:100% !important; max-height:none !important; overflow:visible !important; }
+            html, body { background:#ffffff !important; margin:0 !important; padding:0 !important; }
+            /* Isolated-clone printing: hide the whole app, show ONLY #printRoot (normal flow, zero clipping) */
+            body > *:not(#printRoot):not(script):not(style):not(noscript) { display:none !important; }
+            #printRoot { display:block !important; position:static !important; background:#ffffff; color:#111111; font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; }
             .no-print { display:none !important; }
-            @page { size:A4; margin:12mm; }
+
+            @page { size:A4 portrait; margin:8mm; }
+            * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
         }
 
         @media (max-width: 768px) {
@@ -350,6 +369,10 @@
             <div class="nav-item" onclick="showSection('payments', this)">
                 <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                 Payments
+            </div>
+            <div class="nav-item" onclick="showSection('account', this)">
+                <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></svg>
+                Company Account
             </div>
             <div class="nav-item" onclick="showSection('invoiceSettings', this)">
                 <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
@@ -573,15 +596,22 @@
                     <h1 class="text-2xl font-bold">Clients</h1>
                     <p class="text-sm text-dark-400 mt-1">Client list with money summary — billed, received &amp; due</p>
                 </div>
-                <button onclick="openClientModal()" class="btn-primary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Add Client
-                </button>
+                <div class="flex gap-3">
+                    <button onclick="openTransferModal()" class="btn-ghost" style="border-color:rgba(168,85,247,0.35);color:#a855f7;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        To Account
+                    </button>
+                    <button onclick="openClientModal()" class="btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add Client
+                    </button>
+                </div>
             </div>
-            <div id="clientsSummaryRow" class="grid grid-cols-3 gap-4 mb-6">
+            <div id="clientsSummaryRow" class="grid grid-cols-4 gap-4 mb-6">
                 <div class="stat-card"><div class="text-lg font-bold text-white" id="clientSumBilled">৳0</div><div class="text-xs text-dark-400 mt-1">Total Billed</div></div>
                 <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="clientSumReceived">৳0</div><div class="text-xs text-dark-400 mt-1">Total Received</div></div>
                 <div class="stat-card"><div class="text-lg font-bold" style="color:#ef4444;" id="clientSumDue">৳0</div><div class="text-xs text-dark-400 mt-1">Total Due</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#a855f7;" id="clientSumMonthly">৳0</div><div class="text-xs text-dark-400 mt-1">Monthly Subscriptions</div></div>
             </div>
             <input type="text" id="clientSearch" class="input-field mb-4" placeholder="Search client by name / phone / company..." oninput="renderClients()">
             <div id="clientsList" class="space-y-4"></div>
@@ -609,6 +639,7 @@
                 <button onclick="setInvoiceFilter('partial', this)" class="btn-ghost text-xs">Partial</button>
                 <button onclick="setInvoiceFilter('paid', this)" class="btn-ghost text-xs">Paid</button>
             </div>
+            <input type="text" id="invoiceSearch" class="input-field mb-4" placeholder="Search by client name / phone / company / invoice no..." oninput="renderInvoices()">
             <div id="invoicesList" class="space-y-4"></div>
             <div id="invoicesEmpty" class="empty-state hidden">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -635,12 +666,54 @@
             </div>
         </div>
 
+        <!-- ===== COMPANY ACCOUNT (DEPOSIT / WITHDRAW) ===== -->
+        <div id="section-account" class="section">
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold">Company Account</h1>
+                    <p class="text-sm text-dark-400 mt-1">Company deposits &amp; withdrawals — who took or added, when and how much</p>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="openCashbookReport()" class="btn-ghost text-xs py-2.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Print Report
+                    </button>
+                    <button onclick="openTxnModal('withdraw')" class="btn-primary" style="background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.35);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                        Withdraw
+                    </button>
+                    <button onclick="openTxnModal('deposit')" class="btn-primary" style="background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.35);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                        Deposit
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="accTotalDeposit">৳0</div><div class="text-xs text-dark-400 mt-1">Total Deposit</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#ef4444;" id="accTotalWithdraw">৳0</div><div class="text-xs text-dark-400 mt-1">Total Withdraw</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#4F9DFF;" id="accBalance">৳0</div><div class="text-xs text-dark-400 mt-1">Current Balance</div></div>
+            </div>
+
+            <div id="txnFilterRow" class="flex flex-wrap gap-2 mb-6">
+                <button onclick="setTxnFilter('all', this)" class="btn-ghost text-xs active-filter">All</button>
+                <button onclick="setTxnFilter('deposit', this)" class="btn-ghost text-xs">Deposit</button>
+                <button onclick="setTxnFilter('withdraw', this)" class="btn-ghost text-xs">Withdraw</button>
+            </div>
+
+            <div id="txnsList" class="space-y-3"></div>
+            <div id="txnsEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></svg>
+                <p class="text-sm">No transactions yet. Add your first deposit!</p>
+            </div>
+        </div>
+
         <!-- ===== INVOICE SETTINGS ===== -->
         <div id="section-invoiceSettings" class="section">
             <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
                 <div>
                     <h1 class="text-2xl font-bold">Invoice Settings</h1>
-                    <p class="text-sm text-dark-400 mt-1">Company info, logo &amp; invoice layout — printed invoice-তে এগুলোই দেখাবে</p>
+                    <p class="text-sm text-dark-400 mt-1">Company info, logo &amp; invoice layout — these appear on printed invoices</p>
                 </div>
                 <button onclick="saveInvoiceSettings()" class="btn-primary">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -685,9 +758,23 @@
                     <h3 class="text-sm font-semibold mb-5">Invoice Logo</h3>
                     <label class="block text-xs font-medium text-dark-400 mb-1.5">Logo URL</label>
                     <input type="url" id="setLogoUrl" class="input-field" placeholder="https://example.com/your-logo.png" oninput="previewInvoiceLogo(this.value)">
-                    <p class="text-xs text-dark-500 mt-2 leading-relaxed">আপনার logo-র direct link (PNG/JPG) দিন — invoice-এর উপরে বাম পাশে দেখাবে। খালি রাখলে শুধু ADATA CLOUD টেক্সট দেখাবে।</p>
+                    <p class="text-xs text-dark-500 mt-2 leading-relaxed">Paste your logo's direct link (PNG/JPG) — it appears at the top of the invoice. Leave empty to show only the ADATA CLOUD text.</p>
                     <div id="invoiceLogoPreviewBox" style="display:none;margin-top:16px;">
-                        <img id="invoiceLogoPreview" src="" alt="Logo preview" style="max-height:64px;max-width:220px;object-fit:contain;border-radius:10px;background:#f5f5f7;padding:10px;display:block;">
+                        <img id="invoiceLogoPreview" src="" alt="Logo preview" style="height:58px;width:auto;max-width:220px;object-fit:contain;border-radius:10px;background:#f5f5f7;padding:10px;display:block;">
+                    </div>
+                    <div style="margin-top:18px;" id="logoSizeWrap">
+                        <label class="block text-xs font-medium text-dark-400 mb-2">Logo Size on Invoice &mdash; <span id="logoSizeLabel" style="font-weight:700;color:#e5e5e7;">58px</span></label>
+                        <input type="range" id="setLogoSize" min="30" max="150" step="2" value="58" oninput="setLogoSize(this.value)" class="w-full" style="accent-color:#4F9DFF;">
+                        <p class="text-xs text-dark-500 mt-2 leading-relaxed">Slide to make the logo bigger or smaller on printed invoices, statements and cash book.</p>
+                    </div>
+                    <div style="margin-top:18px;">
+                        <label class="block text-xs font-medium text-dark-400 mb-2">Logo Position</label>
+                        <div class="fw-wrap">
+                            <button type="button" id="lpOpt-left" class="fw-btn active" onclick="setLogoPos('left')">Left</button>
+                            <button type="button" id="lpOpt-center" class="fw-btn" onclick="setLogoPos('center')">Center</button>
+                            <button type="button" id="lpOpt-right" class="fw-btn" onclick="setLogoPos('right')">Right</button>
+                        </div>
+                        <p class="text-xs text-dark-500 mt-2 leading-relaxed">Move the logo to the left side, middle, or right side of the invoice top.</p>
                     </div>
                 </div>
 
@@ -697,12 +784,67 @@
                     <div class="flex items-center justify-between gap-6 py-1">
                         <div>
                             <div class="text-sm font-medium">Show Qty column</div>
-                            <div class="text-xs text-dark-400 mt-1.5 leading-relaxed">আপনি product না, software/সার্ভিস দেন — তাই Qty OFF রাখুন (default)। ভবিষ্যতে পণ্য বিক্রি করলে ON করবেন, invoice-এ Qty কলাম ফিরে আসবে।</div>
+                            <div class="text-xs text-dark-400 mt-1.5 leading-relaxed">You sell software/services, not physical products — keep Qty OFF (default). Turn it ON later if you start selling products; the Qty column will return on invoices.</div>
                         </div>
                         <label class="ios-switch-wrap">
                             <input type="checkbox" id="setShowQty" class="ios-switch">
                             <span class="ios-slider"></span>
                         </label>
+                    </div>
+                </div>
+
+                <!-- Invoice Design -->
+                <div class="glass-card p-6">
+                    <h3 class="text-sm font-semibold mb-5">Print Style &mdash; Invoices &amp; Reports</h3>
+                    <p class="text-xs text-dark-500 mb-5">Controls EVERYTHING that prints — invoices, client statements and cash book. Printed text looks thin or unreadable? Increase Text Darkness, thicken the writing, or switch to pure Black &amp; White.</p>
+
+                    <div class="grid grid-cols-2 gap-8">
+                        <div>
+                            <label class="block text-xs font-medium text-dark-400 mb-2">Text Darkness (make writing darker) &mdash; <span id="inkLabel" style="font-weight:700;color:#e5e5e7;">0%</span></label>
+                            <input type="range" id="setTextInk" min="0" max="100" step="10" value="0" oninput="setTextInk(this.value)" class="w-full" style="accent-color:#4F9DFF;">
+                            <p class="text-xs text-dark-500 mt-2 leading-relaxed">Print looks too thin? Slide up to darken every word &amp; number (100% = pure black). Keep at 0% for the original light look.</p>
+
+                            <label class="block text-xs font-medium text-dark-400 mt-6 mb-2">Text Thickness</label>
+                            <div class="fw-wrap">
+                                <button type="button" id="fwOpt-normal" class="fw-btn active" onclick="setTextWeight('normal')">Normal</button>
+                                <button type="button" id="fwOpt-medium" class="fw-btn" onclick="setTextWeight('medium')">Medium</button>
+                                <button type="button" id="fwOpt-bold" class="fw-btn" onclick="setTextWeight('bold')">Bold</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between gap-6 py-1">
+                                <div>
+                                    <div class="text-sm font-medium">Black &amp; White Mode</div>
+                                    <div class="text-xs text-dark-400 mt-1.5 leading-relaxed">All colored accents become neutral dark gray — perfect for black &amp; white laser printers. Status marks (PAID/DUE) stay readable.</div>
+                                </div>
+                                <label class="ios-switch-wrap">
+                                    <input type="checkbox" id="setBwMode" class="ios-switch" onchange="setBwMode(this.checked)">
+                                    <span class="ios-slider"></span>
+                                </label>
+                            </div>
+                            <div id="colorControlsWrap" style="margin-top:22px;">
+                                <label class="block text-xs font-medium text-dark-400 mb-2">Accent Color <span class="text-dark-500">(when B&amp;W is OFF)</span></label>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <input type="color" id="setAccentColor" value="#2563EB" onchange="setAccentColor(this.value)" style="width:44px;height:32px;border:none;background:none;cursor:pointer;padding:0;">
+                                    <button type="button" class="accent-swatch" data-accent="#2563EB" style="background:#2563EB;" onclick="pickAccent('#2563EB')"></button>
+                                    <button type="button" class="accent-swatch" data-accent="#16A34A" style="background:#16A34A;" onclick="pickAccent('#16A34A')"></button>
+                                    <button type="button" class="accent-swatch" data-accent="#7C3AED" style="background:#7C3AED;" onclick="pickAccent('#7C3AED')"></button>
+                                    <button type="button" class="accent-swatch" data-accent="#EA580C" style="background:#EA580C;" onclick="pickAccent('#EA580C')"></button>
+                                    <button type="button" class="accent-swatch" data-accent="#0D9488" style="background:#0D9488;" onclick="pickAccent('#0D9488')"></button>
+                                    <button type="button" class="accent-swatch" data-accent="#E11D48" style="background:#E11D48;" onclick="pickAccent('#E11D48')"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
+                            <label class="block text-xs font-medium text-dark-400">Live Preview</label>
+                            <span class="text-xs text-dark-500">Instant preview — click "Save Invoice Settings" below to keep changes</span>
+                        </div>
+                        <div style="background:#ffffff;border-radius:12px;border:1px solid rgba(255,255,255,0.06);height:520px;overflow:hidden;position:relative;">
+                            <div id="invoiceDesignPreview" style="transform:scale(0.45);transform-origin:top left;width:720px;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1077,6 +1219,10 @@
                 <input type="text" id="clientCompany" class="input-field" placeholder="e.g. Rahim Enterprise">
             </div>
             <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Monthly Software Subscription (৳)</label>
+                <input type="number" id="clientMonthly" class="input-field" min="0" step="any" placeholder="e.g. 500 — leave empty if none">
+            </div>
+            <div>
                 <label class="block text-xs font-medium text-dark-400 mb-1.5">Address</label>
                 <textarea id="clientAddress" class="input-field" style="min-height:60px;" placeholder="Full address..."></textarea>
             </div>
@@ -1143,7 +1289,10 @@
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="text-xs font-medium text-dark-400">Items *</label>
-                    <button type="button" onclick="addInvoiceItemRow()" class="btn-ghost text-xs py-1 px-3" style="border-color:rgba(79,157,255,0.25);color:#4F9DFF;">+ Add Item</button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="addSubscriptionItem()" id="invSubBtn" class="btn-ghost text-xs py-1 px-3 hidden" style="border-color:rgba(168,85,247,0.3);color:#a855f7;">+ Subscription</button>
+                        <button type="button" onclick="addInvoiceItemRow()" class="btn-ghost text-xs py-1 px-3" style="border-color:rgba(79,157,255,0.25);color:#4F9DFF;">+ Add Item</button>
+                    </div>
                 </div>
                 <div class="grid gap-2" style="grid-template-columns:1fr 70px 100px 110px 36px;" id="invItemHeader">
                     <div class="text-xs text-dark-500 px-1">Description</div>
@@ -1331,6 +1480,9 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Print Root (isolated print clone) -->
+<div id="printRoot"></div>
+
 <!-- ========== ARTH AUTH MODAL ========== -->
 <div class="modal-overlay" id="arthAuthModal">
     <div class="modal-content" style="max-width:400px;">
@@ -1346,6 +1498,116 @@
                 <button onclick="verifyArthPassword()" class="btn-primary flex-1 justify-center" id="arthAuthBtn">Unlock</button>
                 <button onclick="closeModal('arthAuthModal')" class="btn-ghost flex-1 justify-center">Cancel</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== TRANSACTION MODAL (DEPOSIT / WITHDRAW) ========== -->
+<div class="modal-overlay" id="txnModal">
+    <div class="modal-content" style="max-width:460px;">
+        <div class="flex items-center justify-between p-6 pb-0">
+            <h3 id="txnModalTitle" class="text-lg font-semibold">Add Deposit</h3>
+            <button onclick="closeModal('txnModal')" class="text-dark-500 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount (৳) *</label>
+                    <input type="number" id="txnAmount" class="input-field" min="1" placeholder="e.g. 50000">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Date *</label>
+                    <input type="date" id="txnDate" class="input-field">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5" id="txnPersonLabel">Received / Deposited By *</label>
+                <input type="text" id="txnPerson" class="input-field" placeholder="e.g. Arpan (Owner) / Manager">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Method</label>
+                    <select id="txnMethod" class="input-field" style="appearance:auto;">
+                        <option>Cash</option><option>bKash</option><option>Nagad</option><option>Rocket</option><option>Bank Transfer</option><option>Card</option><option>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Note</label>
+                    <input type="text" id="txnNote" class="input-field" placeholder="Optional reason...">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="saveTransaction()" id="txnSaveBtn" class="btn-primary flex-1 justify-center py-2.5">Save</button>
+                <button onclick="closeModal('txnModal')" class="btn-ghost flex-1 justify-center py-2.5">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== TRANSFER TO COMPANY ACCOUNT MODAL ========== -->
+<div class="modal-overlay" id="transferModal">
+    <div class="modal-content" style="max-width:430px;">
+        <div class="flex items-center justify-between p-6 pb-0">
+            <div>
+                <h3 class="text-lg font-semibold">Transfer to Company Account</h3>
+                <p class="text-xs text-dark-400 mt-0.5" id="transferClientName"></p>
+            </div>
+            <button onclick="closeModal('transferModal')" class="text-dark-500 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Select Client *</label>
+                <select id="transferClientSelect" class="input-field" onchange="selectTransferClient()" style="appearance:auto;"></select>
+            </div>
+            <div class="glass-card p-4 flex items-center justify-between" style="background:rgba(79,157,255,0.05);">
+                <span class="text-xs text-dark-400">Available received money</span>
+                <span class="text-sm font-bold" id="transferAvail" style="color:#22c55e;">৳0</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount (৳) *</label>
+                    <input type="number" id="transferAmount" class="input-field" min="1" step="any">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Date *</label>
+                    <input type="date" id="transferDate" class="input-field">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Method</label>
+                    <select id="transferMethod" class="input-field" style="appearance:auto;">
+                        <option>Cash</option><option>bKash</option><option>Nagad</option><option>Rocket</option><option>Bank Transfer</option><option>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Note</label>
+                    <input type="text" id="transferNote" class="input-field" placeholder="Optional...">
+                </div>
+            </div>
+            <p class="text-xs text-dark-500 leading-relaxed">This adds a Deposit to Company Account and reduces this client's Total Received by the same amount. Deleting the transaction from Company Account returns the money.</p>
+            <div class="flex gap-3 pt-1">
+                <button onclick="saveTransfer()" id="transferSaveBtn" class="btn-primary flex-1 justify-center py-2.5">Transfer</button>
+                <button onclick="closeModal('transferModal')" class="btn-ghost flex-1 justify-center py-2.5">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== REPORT MODAL (STATEMENT / CASHBOOK) ========== -->
+<div class="modal-overlay" id="reportModal">
+    <div class="modal-content" style="max-width:800px;background:#fff;color:#111;">
+        <div id="reportPrintArea"></div>
+        <div class="no-print flex gap-3 p-5 border-t border-gray-200">
+            <button onclick="printCurrentReport()" class="btn-primary flex-1 justify-center" style="background:#111;border-color:#333;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Print / Save PDF
+            </button>
+            <button onclick="closeModal('reportModal')" class="btn-ghost" style="color:#555;border-color:#ddd;">Close</button>
         </div>
     </div>
 </div>
@@ -1458,6 +1720,7 @@ function showSection(name, el) {
     if (el) el.classList.add('active');
     else if (event && event.currentTarget) event.currentTarget.classList.add('active');
     document.getElementById('sidebar').classList.remove('open');
+    if (name === 'settings') setTimeout(updateDesignPreview, 30);
 }
 
 // === TOAST ===
@@ -1997,6 +2260,7 @@ function loadAllData() {
     loadClients();
     loadInvoices();
     loadPayments();
+    loadTransactions();
     loadInvoiceSettings();
 }
 
@@ -2012,7 +2276,14 @@ var COMPANY_INFO = {
     web: 'www.adatacloud.com',
     address: '',
     logo: '',
-    showQty: false
+    showQty: false,
+    logoSize: 58,
+    logoPos: 'left',
+    accentColor: '#2563EB',
+    accentShade: 0,
+    textInk: 0,
+    textWeight: 'normal',
+    bwMode: false
 };
 
 // === INVOICE SETTINGS ===
@@ -2036,6 +2307,56 @@ function applyInvoiceSettings() {
     COMPANY_INFO.address = s.address || '';
     COMPANY_INFO.logo = s.logoUrl || '';
     COMPANY_INFO.showQty = !!s.showQty;
+    if (s.accentColor && /^#[0-9A-Fa-f]{6}$/.test(s.accentColor)) COMPANY_INFO.accentColor = s.accentColor;
+    if (typeof s.accentShade === 'number' && s.accentShade >= 0 && s.accentShade <= 50) COMPANY_INFO.accentShade = s.accentShade;
+    if (typeof s.textInk === 'number' && s.textInk >= 0 && s.textInk <= 100) COMPANY_INFO.textInk = s.textInk;
+    if (['normal', 'medium', 'bold'].indexOf(s.textWeight) !== -1) COMPANY_INFO.textWeight = s.textWeight;
+    COMPANY_INFO.bwMode = !!s.bwMode;
+    if (typeof s.logoSize === 'number' && s.logoSize >= 30 && s.logoSize <= 150) COMPANY_INFO.logoSize = s.logoSize;
+    if (['left', 'center', 'right'].indexOf(s.logoPos) !== -1) COMPANY_INFO.logoPos = s.logoPos;
+}
+
+function hexToParts(hex) {
+    var h = String(hex || '').replace('#', '');
+    if (!/^[0-9A-Fa-f]{6}$/.test(h)) return { r: 37, g: 99, b: 235 };
+    return { r: parseInt(h.substr(0, 2), 16), g: parseInt(h.substr(2, 2), 16), b: parseInt(h.substr(4, 2), 16) };
+}
+
+function inkFactor() {
+    return 1 - (Number(COMPANY_INFO.textInk) || 0) / 100;
+}
+
+function inkHex(hex) {
+    var p = hexToParts(hex);
+    var f = inkFactor();
+    return 'rgb(' + Math.round(p.r * f) + ',' + Math.round(p.g * f) + ',' + Math.round(p.b * f) + ')';
+}
+
+function wt(n) {
+    var w = COMPANY_INFO.textWeight || 'normal';
+    if (w === 'medium') return Math.min(900, n + 100);
+    if (w === 'bold') return Math.min(900, n + 200);
+    return n;
+}
+
+function buildThemeFrom(baseHex, shadePct) {
+    var p = hexToParts(baseHex);
+    var f = 1 - (Number(shadePct) || 0) / 100;
+    var r = Math.round(p.r * f), g = Math.round(p.g * f), b = Math.round(p.b * f);
+    var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    var light = lum > 0.62;
+    return {
+        css: 'rgb(' + r + ',' + g + ',' + b + ')',
+        parts: { r: r, g: g, b: b },
+        text: light ? '#1d1d1f' : '#ffffff',
+        soft: light ? 'rgba(29,29,31,0.72)' : 'rgba(255,255,255,0.85)',
+        tint: function(a) { return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+    };
+}
+
+function accentTheme() {
+    if (COMPANY_INFO.bwMode) return buildThemeFrom('#3a3a3c', Number(COMPANY_INFO.textInk) || 0);
+    return buildThemeFrom(COMPANY_INFO.accentColor, Number(COMPANY_INFO.accentShade) || 0);
 }
 
 function renderInvoiceSettingsForm() {
@@ -2049,6 +2370,120 @@ function renderInvoiceSettingsForm() {
     document.getElementById('setLogoUrl').value = s.logoUrl || '';
     document.getElementById('setShowQty').checked = !!s.showQty;
     previewInvoiceLogo(s.logoUrl || '');
+    syncDesignControls();
+}
+
+function setAccentColor(v) {
+    if (!/^#[0-9A-Fa-f]{6}$/.test(v)) return;
+    COMPANY_INFO.accentColor = v;
+    syncDesignControls();
+    updateDesignPreview();
+}
+
+function pickAccent(hex) {
+    COMPANY_INFO.accentColor = hex;
+    syncDesignControls();
+    updateDesignPreview();
+}
+
+function setAccentShade(v) {
+    var n = Math.max(0, Math.min(50, Number(v) || 0));
+    COMPANY_INFO.accentShade = n;
+    updateDesignPreview();
+}
+
+function setTextInk(v) {
+    var n = Math.max(0, Math.min(100, Number(v) || 0));
+    COMPANY_INFO.textInk = n;
+    var lbl = document.getElementById('inkLabel');
+    if (lbl) lbl.textContent = n + '%';
+    updateDesignPreview();
+}
+
+function setTextWeight(w) {
+    if (['normal', 'medium', 'bold'].indexOf(w) === -1) return;
+    COMPANY_INFO.textWeight = w;
+    syncDesignControls();
+    updateDesignPreview();
+}
+
+function setBwMode(on) {
+    COMPANY_INFO.bwMode = !!on;
+    syncDesignControls();
+    updateDesignPreview();
+}
+
+function setLogoSize(v) {
+    var n = Math.max(30, Math.min(150, Number(v) || 58));
+    COMPANY_INFO.logoSize = n;
+    var lbl = document.getElementById('logoSizeLabel');
+    if (lbl) lbl.textContent = n + 'px';
+    previewInvoiceLogo((document.getElementById('setLogoUrl') || {}).value || '');
+    updateDesignPreview();
+}
+
+function setLogoPos(pos) {
+    if (['left', 'center', 'right'].indexOf(pos) === -1) return;
+    COMPANY_INFO.logoPos = pos;
+    syncDesignControls();
+    previewInvoiceLogo((document.getElementById('setLogoUrl') || {}).value || '');
+    updateDesignPreview();
+}
+
+function syncDesignControls() {
+    var picker = document.getElementById('setAccentColor');
+    if (picker) picker.value = COMPANY_INFO.accentColor;
+    document.querySelectorAll('.accent-swatch').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-accent') === COMPANY_INFO.accentColor);
+    });
+    var slider = document.getElementById('setTextInk');
+    if (slider) slider.value = COMPANY_INFO.textInk;
+    var lbl = document.getElementById('inkLabel');
+    if (lbl) lbl.textContent = COMPANY_INFO.textInk + '%';
+    ['normal', 'medium', 'bold'].forEach(function(w) {
+        var el = document.getElementById('fwOpt-' + w);
+        if (el) el.classList.toggle('active', COMPANY_INFO.textWeight === w);
+    });
+    var bw = document.getElementById('setBwMode');
+    if (bw) bw.checked = !!COMPANY_INFO.bwMode;
+    var cw = document.getElementById('colorControlsWrap');
+    if (cw) {
+        cw.style.opacity = COMPANY_INFO.bwMode ? '0.35' : '1';
+        cw.style.pointerEvents = COMPANY_INFO.bwMode ? 'none' : 'auto';
+    }
+    var ls = document.getElementById('setLogoSize');
+    if (ls) ls.value = COMPANY_INFO.logoSize;
+    var ll = document.getElementById('logoSizeLabel');
+    if (ll) ll.textContent = COMPANY_INFO.logoSize + 'px';
+    ['left', 'center', 'right'].forEach(function(p) {
+        var el = document.getElementById('lpOpt-' + p);
+        if (el) el.classList.toggle('active', COMPANY_INFO.logoPos === p);
+    });
+}
+
+function designSampleInvoice() {
+    return {
+        number: 'INV-0001',
+        date: todayStr(),
+        dueDate: '',
+        clientName: 'Sample Client',
+        clientPhone: '+880 1700-000000',
+        subject: 'Website and Software Service',
+        items: [
+            { desc: 'Business Website Design', qty: 1, rate: 18000 },
+            { desc: 'Monthly Software Subscription', qty: 1, rate: 500 }
+        ],
+        discount: 1000,
+        vatPercent: 5,
+        paidAmount: 5000,
+        notes: 'This is a live design preview with sample data.'
+    };
+}
+
+function updateDesignPreview() {
+    var box = document.getElementById('invoiceDesignPreview');
+    if (!box) return;
+    box.innerHTML = buildInvoiceHTML(designSampleInvoice());
 }
 
 function saveInvoiceSettings() {
@@ -2063,6 +2498,13 @@ function saveInvoiceSettings() {
         address: document.getElementById('setCompAddress').value.trim(),
         logoUrl: document.getElementById('setLogoUrl').value.trim(),
         showQty: document.getElementById('setShowQty').checked,
+        accentColor: COMPANY_INFO.accentColor || '#2563EB',
+        accentShade: Number(COMPANY_INFO.accentShade) || 0,
+        textInk: Number(COMPANY_INFO.textInk) || 0,
+        textWeight: COMPANY_INFO.textWeight || 'normal',
+        bwMode: !!COMPANY_INFO.bwMode,
+        logoSize: Number(COMPANY_INFO.logoSize) || 58,
+        logoPos: COMPANY_INFO.logoPos || 'left',
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     db.collection('invoice_settings').doc('main').set(data, { merge: true }).then(function() {
@@ -2076,6 +2518,13 @@ function saveInvoiceSettings() {
 function previewInvoiceLogo(url) {
     var box = document.getElementById('invoiceLogoPreviewBox');
     var img = document.getElementById('invoiceLogoPreview');
+    var psz = Number(COMPANY_INFO.logoSize) || 58;
+    img.style.height = psz + 'px';
+    img.style.width = 'auto';
+    img.style.maxWidth = Math.round(psz * 210 / 58) + 'px';
+    var pos = COMPANY_INFO.logoPos || 'left';
+    img.style.marginLeft = (pos === 'left') ? '0' : 'auto';
+    img.style.marginRight = 'auto';
     if (url && url.trim()) {
         img.src = url;
         box.style.display = 'block';
@@ -2166,6 +2615,7 @@ function openClientModal(data) {
     document.getElementById('clientPhone').value = data ? data.phone : '';
     document.getElementById('clientEmail').value = data ? (data.email || '') : '';
     document.getElementById('clientCompany').value = data ? (data.company || '') : '';
+    document.getElementById('clientMonthly').value = (data && Number(data.monthlyCharge) > 0) ? data.monthlyCharge : '';
     document.getElementById('clientAddress').value = data ? (data.address || '') : '';
     document.getElementById('clientNotes').value = data ? (data.notes || '') : '';
     openModal('clientModal');
@@ -2188,13 +2638,32 @@ document.getElementById('clientForm').addEventListener('submit', async function(
             phone: phone,
             email: document.getElementById('clientEmail').value.trim(),
             company: document.getElementById('clientCompany').value.trim(),
+            monthlyCharge: Number(document.getElementById('clientMonthly').value) || 0,
             address: document.getElementById('clientAddress').value.trim(),
             notes: document.getElementById('clientNotes').value.trim(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         if (id) {
             await db.collection('clients').doc(id).update(docData);
-            showToast('Client updated!');
+            // Sync name & phone into all of this client's invoices and payment records
+            var syncCount = 0;
+            try {
+                var batch = db.batch();
+                invoicesCache.forEach(function(inv) {
+                    if (inv.clientId === id && (inv.clientName !== name || inv.clientPhone !== phone)) {
+                        batch.update(db.collection('invoices').doc(inv._id), { clientName: name, clientPhone: phone });
+                        syncCount++;
+                    }
+                });
+                paymentsCache.forEach(function(p) {
+                    if (p.clientId === id && (p.clientName !== name || p.clientPhone !== phone)) {
+                        batch.update(db.collection('payments').doc(p._id), { clientName: name, clientPhone: phone });
+                        syncCount++;
+                    }
+                });
+                if (syncCount > 0) await batch.commit();
+            } catch(syncErr) { console.error('Sync error:', syncErr); }
+            showToast('Client updated!' + (syncCount > 0 ? ' ' + syncCount + ' invoice/payment record' + (syncCount > 1 ? 's' : '') + ' synced.' : ''));
         } else {
             docData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('clients').add(docData);
@@ -2223,11 +2692,13 @@ function renderClients() {
     var empty = document.getElementById('clientsEmpty');
     var q = (document.getElementById('clientSearch').value || '').toLowerCase();
 
-    var sumBilled = 0, sumReceived = 0, sumDue = 0;
+    var sumBilled = 0, sumReceived = 0, sumDue = 0, sumMonthly = 0;
 
     var rows = clientsCache.map(function(c) {
         var m = clientMoney(c._id);
-        sumBilled += m.billed; sumReceived += m.received; sumDue += m.due;
+        var net = clientNetReceived(c._id);
+        sumBilled += m.billed; sumReceived += net; sumDue += m.due;
+        sumMonthly += Number(c.monthlyCharge) || 0;
         return { c: c, m: m };
     }).filter(function(r) {
         if (!q) return true;
@@ -2238,6 +2709,7 @@ function renderClients() {
     document.getElementById('clientSumBilled').textContent = fmtBDT(sumBilled);
     document.getElementById('clientSumReceived').textContent = fmtBDT(sumReceived);
     document.getElementById('clientSumDue').textContent = fmtBDT(sumDue);
+    document.getElementById('clientSumMonthly').textContent = fmtBDT(sumMonthly);
 
     if (!rows.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
@@ -2257,6 +2729,7 @@ function renderClients() {
                     '</div>' +
                 '</div>' +
                 '<div class="flex gap-2 flex-shrink-0 flex-wrap">' +
+                    '<button onclick="openClientStatement(\'' + c._id + '\')" class="btn-ghost text-xs py-1.5 px-3" style="border-color:rgba(79,157,255,0.3);color:#4F9DFF;">Statement</button>' +
                     '<button onclick="openWhatsAppForClient(\'' + c._id + '\')" class="btn-ghost text-xs py-1.5 px-3" style="border-color:rgba(37,211,102,0.3);color:#25D366;">WhatsApp</button>' +
                     '<button onclick="newInvoiceForClient(\'' + c._id + '\')" class="btn-ghost text-xs py-1.5 px-3">Invoice</button>' +
                     '<button onclick="openPaymentModal(null,\'' + c._id + '\')" class="btn-ghost text-xs py-1.5 px-3">Payment</button>' +
@@ -2264,10 +2737,11 @@ function renderClients() {
                     '<button onclick="deleteItem(\'clients\',\'' + c._id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
                 '</div>' +
             '</div>' +
-            '<div class="grid grid-cols-3 gap-3 mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.05);">' +
+            '<div class="grid grid-cols-4 gap-3 mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.05);">' +
                 '<div><div class="text-xs text-dark-500">Total Billed</div><div class="text-sm font-bold text-white mt-0.5">' + fmtBDT(m.billed) + '</div></div>' +
-                '<div><div class="text-xs text-dark-500">Received</div><div class="text-sm font-bold mt-0.5" style="color:#22c55e;">' + fmtBDT(m.received) + '</div></div>' +
+                '<div><div class="text-xs text-dark-500">Received</div><div class="text-sm font-bold mt-0.5" style="color:#22c55e;">' + fmtBDT(clientNetReceived(c._id)) + '</div></div>' +
                 '<div><div class="text-xs text-dark-500">Due</div><div class="text-sm font-bold mt-0.5" style="color:' + (m.due > 0 ? '#ef4444' : '#22c55e') + ';">' + fmtBDT(m.due) + '</div></div>' +
+                '<div><div class="text-xs text-dark-500">Monthly Sub</div><div class="text-sm font-bold mt-0.5" style="color:' + ((Number(c.monthlyCharge) || 0) > 0 ? '#a855f7' : '#737373') + ';">' + ((Number(c.monthlyCharge) || 0) > 0 ? fmtBDT(c.monthlyCharge) : '\u2014') + ((Number(c.monthlyCharge) || 0) > 0 ? '<span class="text-xs text-dark-400">/mo</span>' : '') + '</div></div>' +
             '</div>' +
             (c.notes ? '<p class="text-xs text-dark-400 mt-2 line-clamp-2">' + esc(c.notes) + '</p>' : '');
         list.appendChild(div);
@@ -2319,6 +2793,26 @@ function populateClientSelects() {
 function onInvoiceClientChange() {
     var v = document.getElementById('invoiceClientSelect').value;
     document.getElementById('invoiceManualFields').classList.toggle('hidden', v !== '__manual__');
+    var subBtn = document.getElementById('invSubBtn');
+    if (!subBtn) return;
+    var c = getClientById(v);
+    var charge = c ? (Number(c.monthlyCharge) || 0) : 0;
+    subBtn.classList.toggle('hidden', !(charge > 0));
+    subBtn.textContent = '+ Subscription (' + fmtBDT(charge) + '/mo)';
+}
+
+function addSubscriptionItem() {
+    var cid = document.getElementById('invoiceClientSelect').value;
+    var c = getClientById(cid);
+    var charge = c ? (Number(c.monthlyCharge) || 0) : 0;
+    if (!(charge > 0)) { showToast('No subscription charge set for this client', true); return; }
+    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var now = new Date();
+    addInvoiceItemRow({
+        desc: 'Monthly Software Subscription — ' + months[now.getMonth()] + ' ' + now.getFullYear(),
+        qty: 1,
+        rate: charge
+    });
 }
 
 function nextInvoiceNumber() {
@@ -2415,6 +2909,7 @@ function openInvoiceModal(data, presetClientId) {
     } else {
         sel.value = presetClientId || '';
     }
+    onInvoiceClientChange();
 
     document.getElementById('invoiceNumber').value = data ? data.number : nextInvoiceNumber();
     document.getElementById('invoiceDate').value = data ? data.date : todayStr();
@@ -2498,8 +2993,24 @@ document.getElementById('invoiceForm').addEventListener('submit', async function
             showToast('Invoice updated!');
         } else {
             docData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await db.collection('invoices').add(docData);
-            showToast('Invoice created!');
+            var invRef = await db.collection('invoices').add(docData);
+            if (paidAmount > 0) {
+                try {
+                    await db.collection('payments').add({
+                        clientId: clientId,
+                        clientName: clientName,
+                        clientPhone: clientPhone,
+                        invoiceId: invRef.id,
+                        invoiceNumber: docData.number,
+                        amount: paidAmount,
+                        date: docData.date,
+                        method: 'Advance',
+                        note: 'Advance taken at billing time',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch(e3) { console.error('Advance payment record error:', e3); }
+            }
+            showToast('Invoice created!' + (paidAmount > 0 ? ' Advance of ' + fmtBDT(paidAmount) + ' recorded.' : ''));
         }
         closeModal('invoiceModal');
     } catch(err) { showToast('Error: ' + err.message, true); }
@@ -2517,8 +3028,12 @@ function renderInvoices() {
     var list = document.getElementById('invoicesList');
     var empty = document.getElementById('invoicesEmpty');
 
+    var q = ((document.getElementById('invoiceSearch') || {}).value || '').trim().toLowerCase();
     var rows = invoicesCache.filter(function(inv) {
-        return invoiceFilter === 'all' || invStatus(inv) === invoiceFilter;
+        if (invoiceFilter !== 'all' && invStatus(inv) !== invoiceFilter) return false;
+        if (!q) return true;
+        var hay = ((inv.clientName || '') + ' ' + (inv.clientPhone || '') + ' ' + (inv.number || '') + ' ' + (inv.subject || '')).toLowerCase();
+        return hay.indexOf(q) !== -1;
     });
     rows.sort(function(a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
 
@@ -2573,68 +3088,80 @@ function buildInvoiceHTML(inv) {
     var st = invStatus(inv);
     var comp = COMPANY_INFO;
     var showQty = !!comp.showQty;
+    var th = accentTheme();
+    var cBody = inkHex('#1d1d1f');
+    var cMid = inkHex('#6e6e73');
+    var cMut = inkHex('#86868b');
+    var cSoft = inkHex('#424245');
+
+    var stColor = st === 'paid' ? '#16a34a' : (st === 'partial' ? '#d97706' : '#dc2626');
+    var stText = st === 'paid' ? 'PAID' : (st === 'partial' ? 'PARTIALLY PAID' : 'UNPAID');
+
+    var lsize = Number(comp.logoSize) || 58;
+    var lmaxw = Math.round(lsize * 210 / 58);
+    var lpos = comp.logoPos || 'left';
+    var logoImg = comp.logo
+        ? '<img src="' + esc(comp.logo) + '" alt="" style="display:block;height:' + lsize + 'px;width:auto;max-width:' + lmaxw + 'px;object-fit:contain;margin:' + (lpos === 'center' ? '0 auto' : (lpos === 'right' ? '0 0 0 auto' : '0')) + ';">'
+        : '';
+    var logoTopRow = (comp.logo && lpos !== 'left') ? '<div style="margin-bottom:18px;">' + logoImg + '</div>' : '';
+    var logoInline = (comp.logo && lpos === 'left') ? logoImg : '';
 
     var itemsRows = '';
     (inv.items || []).forEach(function(it, i) {
         var amt = (Number(it.qty) || 0) * (Number(it.rate) || 0);
         itemsRows +=
             '<tr>' +
-                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;color:#86868b;font-size:12px;text-align:center;">' + (i + 1) + '</td>' +
-                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;font-weight:500;">' + esc(it.desc || '-') + '</td>' +
-                (showQty ? '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;text-align:right;">' + esc(it.qty) + '</td>' : '') +
-                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;text-align:right;">' + fmtBDT(it.rate) + '</td>' +
-                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;text-align:right;font-weight:600;">' + fmtBDT(amt) + '</td>' +
+                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;color:' + cMut + ';font-size:12px;text-align:center;">' + (i + 1) + '</td>' +
+                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;font-weight:' + wt(500) + ';color:' + cBody + ';">' + esc(it.desc || '-') + '</td>' +
+                (showQty ? '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;text-align:right;color:' + cBody + ';">' + esc(it.qty) + '</td>' : '') +
+                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;text-align:right;color:' + cBody + ';">' + fmtBDT(it.rate) + '</td>' +
+                '<td style="padding:14px 16px;border-bottom:1px solid #e8e8ed;text-align:right;font-weight:' + wt(600) + ';color:' + cBody + ';">' + fmtBDT(amt) + '</td>' +
             '</tr>';
     });
 
-    var stColor = st === 'paid' ? '#16a34a' : (st === 'partial' ? '#d97706' : '#dc2626');
-    var stText = st === 'paid' ? 'PAID' : (st === 'partial' ? 'PARTIALLY PAID' : 'UNPAID');
-
     var html =
-        '<div style="max-width:720px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',\'Segoe UI\',sans-serif;-webkit-font-smoothing:antialiased;color:#1d1d1f;">' +
-
+        '<div style="max-width:720px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',\'Segoe UI\',sans-serif;-webkit-font-smoothing:antialiased;color:' + cBody + ';">' +
+            logoTopRow +
             '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:1px solid #d2d2d7;">' +
                 '<div>' +
-                    (comp.logo
-                        ? '<img src="' + esc(comp.logo) + '" alt="" style="max-height:58px;max-width:210px;object-fit:contain;display:block;">'
-                        : '') +
-                    '<div style="' + (comp.logo ? 'margin-top:12px;' : '') + 'font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#1d1d1f;">ADATA <span style="color:#4F9DFF;font-weight:600;">CLOUD</span></div>' +
-                    '<div style="font-size:11px;color:#86868b;margin-top:3px;letter-spacing:0.2px;">' + esc(comp.tagline) + '</div>' +
+                    logoInline +
+                    '<div style="' + (logoInline ? 'margin-top:12px;' : '') + 'font-size:22px;font-weight:' + wt(700) + ';letter-spacing:-0.5px;color:' + cBody + ';">ADATA <span style="color:' + th.css + ';font-weight:' + wt(600) + ';">CLOUD</span></div>' +
+                    '<div style="font-size:11px;color:' + cMut + ';margin-top:3px;letter-spacing:0.2px;">' + esc(comp.tagline) + '</div>' +
                     '<table style="margin-top:14px;font-size:11px;border-collapse:collapse;line-height:1.9;">' +
-                        '<tr><td style="color:#86868b;width:52px;padding:0;">Phone</td><td style="padding:0;color:#424245;">' + esc(comp.phone) + '</td></tr>' +
-                        (comp.email ? '<tr><td style="color:#86868b;padding:0;">Email</td><td style="padding:0;color:#424245;">' + esc(comp.email) + '</td></tr>' : '') +
-                        (comp.web ? '<tr><td style="color:#86868b;padding:0;">Web</td><td style="padding:0;color:#424245;">' + esc(comp.web) + '</td></tr>' : '') +
-                        (comp.address ? '<tr><td style="color:#86868b;padding:0;">Address</td><td style="padding:0;color:#424245;">' + esc(comp.address) + '</td></tr>' : '') +
+                        '<tr><td style="color:' + cMut + ';width:52px;padding:0;">Phone</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.phone) + '</td></tr>' +
+                        (comp.email ? '<tr><td style="color:' + cMut + ';padding:0;">Email</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.email) + '</td></tr>' : '') +
+                        (comp.web ? '<tr><td style="color:' + cMut + ';padding:0;">Web</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.web) + '</td></tr>' : '') +
+                        (comp.address ? '<tr><td style="color:' + cMut + ';padding:0;">Address</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.address) + '</td></tr>' : '') +
                     '</table>' +
                 '</div>' +
                 '<div style="text-align:right;">' +
-                    '<div style="font-size:28px;font-weight:600;letter-spacing:-0.5px;color:#1d1d1f;">Invoice</div>' +
-                    '<div style="display:inline-block;background:#f5f5f7;border-radius:100px;padding:4px 14px;margin-top:10px;font-size:10px;font-weight:700;letter-spacing:1px;color:' + stColor + ';">' + stText + '</div>' +
-                    '<table style="margin-left:auto;margin-top:12px;font-size:12px;color:#6e6e73;border-collapse:collapse;line-height:2;">' +
-                        '<tr><td style="text-align:right;padding-right:14px;">Invoice No.</td><td style="font-weight:600;color:#1d1d1f;text-align:left;">' + esc(inv.number) + '</td></tr>' +
-                        '<tr><td style="text-align:right;padding-right:14px;">Date</td><td style="text-align:left;color:#1d1d1f;">' + formatDMY(inv.date) + '</td></tr>' +
-                        (inv.dueDate ? '<tr><td style="text-align:right;padding-right:14px;">Due Date</td><td style="text-align:left;color:#1d1d1f;">' + formatDMY(inv.dueDate) + '</td></tr>' : '') +
+                    '<div style="font-size:28px;font-weight:' + wt(600) + ';letter-spacing:-0.5px;color:' + cBody + ';">Invoice</div>' +
+                    '<div style="display:inline-block;background:#f5f5f7;border-radius:100px;padding:4px 14px;margin-top:10px;font-size:10px;font-weight:' + wt(700) + ';letter-spacing:1px;color:' + stColor + ';">' + stText + '</div>' +
+                    '<table style="margin-left:auto;margin-top:12px;font-size:12px;color:' + cMid + ';border-collapse:collapse;line-height:2;">' +
+                        '<tr><td style="text-align:right;padding-right:14px;">Invoice No.</td><td style="font-weight:' + wt(600) + ';color:' + cBody + ';text-align:left;">' + esc(inv.number) + '</td></tr>' +
+                        '<tr><td style="text-align:right;padding-right:14px;">Date</td><td style="text-align:left;color:' + cBody + ';">' + formatDMY(inv.date) + '</td></tr>' +
+                        (inv.dueDate ? '<tr><td style="text-align:right;padding-right:14px;">Due Date</td><td style="text-align:left;color:' + cBody + ';">' + formatDMY(inv.dueDate) + '</td></tr>' : '') +
                     '</table>' +
                 '</div>' +
             '</div>' +
 
             '<div style="display:flex;justify-content:space-between;gap:20px;margin-top:26px;">' +
                 '<div style="flex:1;background:#f5f5f7;border-radius:12px;padding:16px 18px;">' +
-                    '<div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:#86868b;margin-bottom:8px;">BILLED TO</div>' +
-                    '<div style="font-size:15px;font-weight:600;color:#1d1d1f;">' + esc(inv.clientName) + '</div>' +
-                    (inv.clientPhone ? '<div style="font-size:12px;color:#6e6e73;margin-top:3px;">' + esc(inv.clientPhone) + '</div>' : '') +
+                    '<div style="font-size:10px;font-weight:' + wt(700) + ';letter-spacing:1.2px;color:' + cMut + ';margin-bottom:8px;">BILLED TO</div>' +
+                    '<div style="font-size:15px;font-weight:' + wt(600) + ';color:' + cBody + ';">' + esc(inv.clientName) + '</div>' +
+                    (inv.clientPhone ? '<div style="font-size:12px;color:' + cMid + ';margin-top:3px;">' + esc(inv.clientPhone) + '</div>' : '') +
                 '</div>' +
-                (inv.subject ? '<div style="flex:1;background:#f5f5f7;border-radius:12px;padding:16px 18px;"><div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:#86868b;margin-bottom:8px;">SUBJECT</div><div style="font-size:13px;color:#1d1d1f;font-weight:500;">' + esc(inv.subject) + '</div></div>' : '') +
+                (inv.subject ? '<div style="flex:1;background:#f5f5f7;border-radius:12px;padding:16px 18px;"><div style="font-size:10px;font-weight:' + wt(700) + ';letter-spacing:1.2px;color:' + cMut + ';margin-bottom:8px;">SUBJECT</div><div style="font-size:13px;color:' + cBody + ';font-weight:' + wt(500) + ';">' + esc(inv.subject) + '</div></div>' : '') +
             '</div>' +
 
             '<table style="width:100%;border-collapse:collapse;margin-top:28px;font-size:13px;">' +
                 '<thead>' +
                     '<tr style="border-bottom:1px solid #d2d2d7;">' +
-                        '<th style="padding:10px 8px;text-align:center;width:36px;font-size:11px;font-weight:600;letter-spacing:0.5px;color:#86868b;text-transform:uppercase;">#</th>' +
-                        '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.5px;color:#86868b;text-transform:uppercase;">Description</th>' +
-                        (showQty ? '<th style="padding:10px 8px;text-align:right;width:56px;font-size:11px;font-weight:600;letter-spacing:0.5px;color:#86868b;text-transform:uppercase;">Qty</th>' : '') +
-                        '<th style="padding:10px 8px;text-align:right;width:104px;font-size:11px;font-weight:600;letter-spacing:0.5px;color:#86868b;text-transform:uppercase;">Rate</th>' +
-                        '<th style="padding:10px 8px;text-align:right;width:116px;font-size:11px;font-weight:600;letter-spacing:0.5px;color:#86868b;text-transform:uppercase;">Amount</th>' +
+                        '<th style="padding:10px 8px;text-align:center;width:36px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + th.css + ';text-transform:uppercase;">#</th>' +
+                        '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + th.css + ';text-transform:uppercase;">Description</th>' +
+                        (showQty ? '<th style="padding:10px 8px;text-align:right;width:56px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + th.css + ';text-transform:uppercase;">Qty</th>' : '') +
+                        '<th style="padding:10px 8px;text-align:right;width:104px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + th.css + ';text-transform:uppercase;">Rate</th>' +
+                        '<th style="padding:10px 8px;text-align:right;width:116px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + th.css + ';text-transform:uppercase;">Amount</th>' +
                     '</tr>' +
                 '</thead>' +
                 '<tbody>' + itemsRows + '</tbody>' +
@@ -2642,31 +3169,31 @@ function buildInvoiceHTML(inv) {
 
             '<div style="display:flex;justify-content:flex-end;margin-top:16px;">' +
                 '<table style="min-width:320px;font-size:13px;border-collapse:collapse;">' +
-                    '<tr><td style="padding:7px 16px;color:#6e6e73;text-align:right;">Subtotal</td><td style="padding:7px 0;text-align:right;font-weight:500;min-width:130px;color:#1d1d1f;">' + fmtBDT(t.subtotal) + '</td></tr>' +
-                    (t.discount > 0 ? '<tr><td style="padding:7px 16px;color:#6e6e73;text-align:right;">Discount</td><td style="padding:7px 0;text-align:right;color:#dc2626;">\u2212' + fmtBDT(t.discount) + '</td></tr>' : '') +
-                    ((Number(inv.vatPercent) || 0) > 0 ? '<tr><td style="padding:7px 16px;color:#6e6e73;text-align:right;">VAT (' + esc(inv.vatPercent) + '%)</td><td style="padding:7px 0;text-align:right;color:#1d1d1f;">' + fmtBDT(t.vat) + '</td></tr>' : '') +
+                    '<tr><td style="padding:7px 16px;color:' + cMid + ';text-align:right;">Subtotal</td><td style="padding:7px 0;text-align:right;font-weight:' + wt(500) + ';min-width:130px;color:' + cBody + ';">' + fmtBDT(t.subtotal) + '</td></tr>' +
+                    (t.discount > 0 ? '<tr><td style="padding:7px 16px;color:' + cMid + ';text-align:right;">Discount</td><td style="padding:7px 0;text-align:right;color:#dc2626;">\u2212' + fmtBDT(t.discount) + '</td></tr>' : '') +
+                    ((Number(inv.vatPercent) || 0) > 0 ? '<tr><td style="padding:7px 16px;color:' + cMid + ';text-align:right;">VAT (' + esc(inv.vatPercent) + '%)</td><td style="padding:7px 0;text-align:right;color:' + cBody + ';">' + fmtBDT(t.vat) + '</td></tr>' : '') +
                     '<tr><td colspan="2" style="border-top:1px solid #d2d2d7;"></td></tr>' +
-                    '<tr><td style="padding:12px 16px;font-weight:700;text-align:right;font-size:15px;color:#1d1d1f;">Total</td><td style="padding:12px 0;text-align:right;font-weight:700;font-size:17px;color:#1d1d1f;">' + fmtBDT(t.total) + '</td></tr>' +
-                    (t.paidAmount > 0 ? '<tr><td style="padding:7px 16px;color:#6e6e73;text-align:right;">Paid</td><td style="padding:7px 0;text-align:right;color:#16a34a;font-weight:500;">\u2212' + fmtBDT(t.paidAmount) + '</td></tr>' : '') +
+                    '<tr><td style="padding:12px 16px;font-weight:' + wt(700) + ';text-align:right;font-size:15px;color:' + cBody + ';">Total</td><td style="padding:12px 0;text-align:right;font-weight:' + wt(700) + ';font-size:17px;color:' + cBody + ';">' + fmtBDT(t.total) + '</td></tr>' +
+                    (t.paidAmount > 0 ? '<tr><td style="padding:7px 16px;color:' + cMid + ';text-align:right;">Paid</td><td style="padding:7px 0;text-align:right;color:#16a34a;font-weight:' + wt(500) + ';">\u2212' + fmtBDT(t.paidAmount) + '</td></tr>' : '') +
                     '<tr><td colspan="2" style="border-top:1px solid #d2d2d7;"></td></tr>' +
                     '<tr><td colspan="2"><table style="width:100%;border-collapse:collapse;"><tr>' +
-                        '<td style="padding:12px 16px;font-weight:600;text-align:right;color:' + (t.due > 0 ? '#dc2626' : '#16a34a') + ';font-size:13px;">Amount Due</td>' +
-                        '<td style="padding:12px 0;text-align:right;font-weight:700;font-size:19px;color:' + (t.due > 0 ? '#dc2626' : '#16a34a') + ';">' + fmtBDT(t.due) + '</td>' +
+                        '<td style="padding:12px 16px;font-weight:' + wt(600) + ';text-align:right;color:' + (t.due > 0 ? '#dc2626' : '#16a34a') + ';font-size:13px;">Amount Due</td>' +
+                        '<td style="padding:12px 0;text-align:right;font-weight:' + wt(700) + ';font-size:19px;color:' + (t.due > 0 ? '#dc2626' : '#16a34a') + ';">' + fmtBDT(t.due) + '</td>' +
                     '</tr></table></td></tr>' +
                 '</table>' +
             '</div>' +
 
             '<div style="display:flex;justify-content:space-between;gap:40px;margin-top:40px;align-items:flex-end;">' +
-                '<div style="flex:1;font-size:11px;color:#86868b;line-height:1.7;">' +
-                    (inv.notes ? '<div style="background:#f5f5f7;border-radius:12px;padding:14px 18px;margin-bottom:18px;font-size:12px;color:#424245;line-height:1.7;"><span style="display:block;font-size:10px;font-weight:700;letter-spacing:1.2px;color:#86868b;margin-bottom:6px;">NOTES</span>' + esc(inv.notes) + '</div>' : '') +
+                '<div style="flex:1;font-size:11px;color:' + cMut + ';line-height:1.7;">' +
+                    (inv.notes ? '<div style="background:#f5f5f7;border-radius:12px;padding:14px 18px;margin-bottom:18px;font-size:12px;color:' + cSoft + ';line-height:1.7;"><span style="display:block;font-size:10px;font-weight:' + wt(700) + ';letter-spacing:1.2px;color:' + cMut + ';margin-bottom:6px;">NOTES</span>' + esc(inv.notes) + '</div>' : '') +
                     '<div>This is a computer-generated invoice from ' + esc(comp.name) + '.</div>' +
                 '</div>' +
                 '<div style="text-align:center;min-width:190px;padding-top:52px;">' +
-                    '<div style="border-top:1px solid #c7c7cc;padding-top:8px;font-size:11px;color:#86868b;">Authorised Signature</div>' +
+                    '<div style="border-top:1px solid #c7c7cc;padding-top:8px;font-size:11px;color:' + cMut + ';">Authorised Signature</div>' +
                 '</div>' +
             '</div>' +
 
-            '<div style="margin-top:32px;border-top:1px solid #d2d2d7;padding-top:14px;text-align:center;font-size:11px;color:#86868b;letter-spacing:0.2px;">Thank you for your business &nbsp;&middot;&nbsp; ' + esc(comp.name) + ' &nbsp;&middot;&nbsp; ' + esc(comp.phone) + ' &nbsp;&middot;&nbsp; ' + esc(comp.email) + '</div>' +
+            '<div style="margin-top:32px;border-top:1px solid #d2d2d7;padding-top:14px;text-align:center;font-size:11px;color:' + cMut + ';letter-spacing:0.2px;">Thank you for your business &nbsp;&middot;&nbsp; ' + esc(comp.name) + ' &nbsp;&middot;&nbsp; ' + esc(comp.phone) + ' &nbsp;&middot;&nbsp; ' + esc(comp.email) + '</div>' +
         '</div>';
 
     return html;
@@ -2680,8 +3207,44 @@ function viewInvoice(id) {
     openModal('invoiceViewModal');
 }
 
-function printCurrentInvoice() {
+function printViaRoot(srcEl, fitAvailH, minZoom) {
+    var root = document.getElementById('printRoot');
+    if (!root || !srcEl) return;
+    root.innerHTML = srcEl.outerHTML;
+    var node = root.firstElementChild;
+    if (!node) return;
+    node.style.zoom = '';
+    root.style.display = 'block';
+    root.style.position = 'fixed';
+    root.style.left = '-10000px';
+    root.style.top = '0px';
+    root.style.width = '733px'; // A4 printable width (194mm)
+    var h = node.getBoundingClientRect().height || 0;
+    if (fitAvailH && h > 0 && h > fitAvailH) {
+        var z = Math.min(1, fitAvailH / h);
+        if (minZoom && z < minZoom) z = minZoom;
+        node.style.zoom = z.toFixed(3);
+    }
+    document.body.classList.add('printing');
     window.print();
+    setTimeout(function() {
+        document.body.classList.remove('printing');
+        root.innerHTML = '';
+        root.removeAttribute('style');
+    }, 600);
+}
+
+function printCurrentInvoice() {
+    var area = document.getElementById('invoicePrintArea');
+    var inner = area ? area.firstElementChild : null;
+    if (!inner) return;
+    var modal = document.getElementById('invoiceViewModal');
+    if (modal) modal.scrollTop = 0;
+    var go = function() { printViaRoot(inner, 1040, 0); };
+    var imgs = area.querySelectorAll('img');
+    var pending = 0;
+    for (var i = 0; i < imgs.length; i++) { if (!imgs[i].complete) pending++; }
+    if (pending > 0) { setTimeout(go, 400); } else { go(); }
 }
 
 // ================= PAYMENTS =================
@@ -2797,7 +3360,7 @@ document.getElementById('paymentForm').addEventListener('submit', async function
         showToast('Payment recorded!');
         closeModal('paymentModal');
 
-        if (confirm('পেমেন্ট রেকর্ড হয়েছে! ক্লায়েন্টকে WhatsApp-এ Thank You মেসেজ পাঠাবেন?')) {
+        if (confirm('Payment recorded! Send a Thank You message to the client via WhatsApp?')) {
             setTimeout(function() { openWhatsAppThanks(clientId, amount); }, 300);
         }
     } catch(err) {
@@ -2881,7 +3444,7 @@ function fillWaTemplate() {
     if (type === 'custom') { return; }
     var msg = buildWaTemplateText(type);
     if (!msg) {
-        showToast('এই টেমপ্লেটের জন্য পর্যাপ্ত তথ্য নেই', true);
+        showToast('Not enough information for this template', true);
         document.getElementById('waTemplate').value = 'custom';
         return;
     }
@@ -2916,7 +3479,7 @@ function buildWaTemplateText(type) {
         lines.push('*Total: ' + fmtBDT(t.total) + '*');
         if (t.paidAmount > 0) lines.push('Paid: ' + fmtBDT(t.paidAmount));
         lines.push('*Due: ' + fmtBDT(t.due) + '*');
-        if (t.due > 0 && inv.dueDate) lines.push('\nপেমেন্ট ডেডলাইন: ' + formatDMY(inv.dueDate));
+        if (t.due > 0 && inv.dueDate) lines.push('\nPayment deadline: ' + formatDMY(inv.dueDate));
         lines.push(sig);
         return lines.join('\n');
     }
@@ -2928,24 +3491,24 @@ function buildWaTemplateText(type) {
             if (inv.clientId !== c.clientId) return;
             if (invStatus(inv) === 'paid') return;
             var tt = invTotals(inv);
-            dues.push('• ' + inv.number + ' → ' + fmtBDT(tt.due) + (inv.dueDate ? ' (লাস্ট ডেট: ' + formatDMY(inv.dueDate) + ')' : ''));
+            dues.push('• ' + inv.number + ' → ' + fmtBDT(tt.due) + (inv.dueDate ? ' (Due date: ' + formatDMY(inv.dueDate) + ')' : ''));
             totalDue += tt.due;
         });
         if (!totalDue) return '';
-        return 'প্রিয় ' + name + ',\n\nআপনার ' + COMPANY_INFO.name + '-এর সেবার বকেয়া আছে:\n\n' + dues.join('\n') + '\n\n*মোট বকেয়া: ' + fmtBDT(totalDue) + '*\n\nঅনুগ্রহ করে সময়মতো পেমেন্ট করুন। কোনো প্রশ্ন থাকলে জানাবেন।' + sig;
+        return 'Dear ' + name + ',\n\nYou have pending dues for ' + COMPANY_INFO.name + ' services:\n\n' + dues.join('\n') + '\n\n*Total Due: ' + fmtBDT(totalDue) + '*\n\nPlease complete the payment on time. Let us know if you have any questions.' + sig;
     }
 
     if (type === 'thanks') {
         var amtLine = c.lastAmount ? ' *' + fmtBDT(c.lastAmount) + '*' : '';
-        return 'প্রিয় ' + name + ',\n\nআপনার' + amtLine + ' পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে।\n\nআমাদের সেবা ব্যবহারের জন্য ধন্যবাদ। ভবিষ্যতে যেকোনো প্রয়োজনে আমরা আপনার পাশে আছি।' + sig;
+        return 'Dear ' + name + ',\n\nYour payment of' + amtLine + ' has been received successfully.\n\nThank you for using our services. We are always here for any of your future needs.' + sig;
     }
 
     if (type === 'renewal') {
-        return 'প্রিয় ' + name + ',\n\nআপনার সার্ভিস সুবিধা খুব শীঘ্রই নবায়ন করা প্রয়োজন।\n\nসার্ভিস চালু রাখতে সময়মতো রিনিউ করে নিন। রিনিউয়াল নিয়ে বিস্তারিত জানতে এই মেসেজের রিপ্লাই দিন।\n\nধন্যবাদ!' + sig;
+        return 'Dear ' + name + ',\n\nYour service subscription needs to be renewed very soon.\n\nPlease renew on time to keep your service active. Reply to this message for renewal details.\n\nThank you!' + sig;
     }
 
     if (type === 'offer') {
-        return '*বিশেষ অফার*\n\nপ্রিয় ' + name + ',\n\n' + COMPANY_INFO.name + '-এর সব সফটওয়্যার ও ওয়েব সার্ভিসে এখন বিশেষ ছাড় চলছে।\n\n• ERP / POS Software\n• Website & Web App\n• Cloud Hosting\n• AI Automation\n\nসীমিত সময়ের জন্য — আজই যোগাযোগ করুন।' + sig;
+        return '*Special Offer*\n\nDear ' + name + ',\n\nEnjoy special discounts on all ' + COMPANY_INFO.name + ' software & web services.\n\n• ERP / POS Software\n• Website & Web App\n• Cloud Hosting\n• AI Automation\n\nLimited time offer — contact us today.' + sig;
     }
 
     return '';
@@ -2971,6 +3534,7 @@ function copyWaMessage() {
 
 // ================= FINANCE STATS =================
 function refreshBusinessUI() {
+    renderTransactions();
     renderClients();
     renderInvoices();
     renderPayments();
@@ -3273,7 +3837,7 @@ function removeArthTyping() {
 
 async function getArthChatResponse(msg) {
     var btn = document.getElementById('ARTHSendBtn') || document.getElementById('arthSendBtn');
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     appendArthTyping();
     try {
         var contextMsg = 'Chat history:\n';
@@ -3289,7 +3853,7 @@ async function getArthChatResponse(msg) {
         removeArthTyping();
         appendArthChat('assistant', 'Error: ' + e.message);
     }
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
 }
 
 function clearArthChat() {
@@ -3447,6 +4011,394 @@ document.head.appendChild(arthStyle);
 document.getElementById('arthAuthPassword').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') verifyArthPassword();
 });
+
+// ============================================================
+// === COMPANY ACCOUNT: DEPOSIT / WITHDRAW (TRANSACTIONS) ===
+// ============================================================
+
+var txnsCache = [];
+var txnFilter = 'all';
+var currentTxnType = 'deposit';
+
+function loadTransactions() {
+    db.collection('transactions').onSnapshot(function(snap) {
+        txnsCache = [];
+        snap.forEach(function(doc) { var d = doc.data(); d._id = doc.id; txnsCache.push(d); });
+        refreshBusinessUI();
+    }, function(err) { console.error('Transactions load error:', err); showToast('Error loading account data', true); });
+}
+
+function txnTotals() {
+    var dep = 0, wd = 0;
+    txnsCache.forEach(function(t) {
+        if (t.type === 'withdraw') wd += Number(t.amount) || 0;
+        else dep += Number(t.amount) || 0;
+    });
+    return { deposit: dep, withdraw: wd, balance: dep - wd };
+}
+
+function setTxnFilter(f, el) {
+    txnFilter = f;
+    document.querySelectorAll('#txnFilterRow .btn-ghost').forEach(function(b) { b.classList.remove('active-filter'); });
+    el.classList.add('active-filter');
+    renderTransactions();
+}
+
+function renderTransactions() {
+    updateAccountStats();
+    var list = document.getElementById('txnsList');
+    var empty = document.getElementById('txnsEmpty');
+    if (!list) return;
+    var rows = txnsCache.slice();
+    rows.sort(function(a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+    if (txnFilter !== 'all') rows = rows.filter(function(t) { return t.type === txnFilter; });
+
+    if (!rows.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    list.innerHTML = '';
+    rows.forEach(function(t) {
+        var isWd = t.type === 'withdraw';
+        var color = isWd ? '#ef4444' : '#22c55e';
+        var bg = isWd ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)';
+        var border = isWd ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)';
+        var icon = isWd
+            ? '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>'
+            : '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>';
+        var div = document.createElement('div');
+        div.className = 'glass-card p-4 flex items-center justify-between gap-3 flex-wrap';
+        div.innerHTML =
+            '<div class="flex items-center gap-3 min-w-0">' +
+                '<div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:' + bg + '; border:1px solid ' + border + ';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2">' + icon + '</svg></div>' +
+                '<div class="min-w-0">' +
+                    '<h4 class="font-semibold text-sm"><span style="color:' + color + ';">' + (isWd ? 'Withdraw' : 'Deposit') + '</span> &middot; ' + esc(t.person || '-') + '</h4>' +
+                    '<p class="text-xs text-dark-400">' + formatDMY(t.date) + (t.method ? ' · ' + esc(t.method) : '') + (t.note ? ' · ' + esc(t.note) : '') + '</p>' +
+                '</div>' +
+            '</div>' +
+            '<div class="flex items-center gap-3">' +
+                '<div class="text-base font-bold" style="color:' + color + ';">' + (isWd ? '\u2212' : '+') + fmtBDT(t.amount) + '</div>' +
+                '<button onclick="deleteItem(\'transactions\',\'' + t._id + '\')" class="btn-danger text-xs py-1.5 px-3">Delete</button>' +
+            '</div>';
+        list.appendChild(div);
+    });
+}
+
+function updateAccountStats() {
+    var elD = document.getElementById('accTotalDeposit');
+    if (!elD) return;
+    var t = txnTotals();
+    document.getElementById('accTotalWithdraw').textContent = fmtBDT(t.withdraw);
+    elD.textContent = fmtBDT(t.deposit);
+    var b = document.getElementById('accBalance');
+    b.textContent = fmtBDT(t.balance);
+    b.style.color = t.balance < 0 ? '#ef4444' : '#4F9DFF';
+}
+
+function openTxnModal(type) {
+    currentTxnType = type === 'withdraw' ? 'withdraw' : 'deposit';
+    document.getElementById('txnModalTitle').textContent = currentTxnType === 'withdraw' ? 'Withdraw Money' : 'Add Deposit';
+    document.getElementById('txnPersonLabel').textContent = currentTxnType === 'withdraw' ? 'Withdrawn By *' : 'Received / Deposited By *';
+    document.getElementById('txnAmount').value = '';
+    document.getElementById('txnDate').value = todayStr();
+    document.getElementById('txnPerson').value = '';
+    document.getElementById('txnMethod').value = 'Cash';
+    document.getElementById('txnNote').value = '';
+    openModal('txnModal');
+}
+
+async function saveTransaction() {
+    var amount = Number(document.getElementById('txnAmount').value);
+    var date = document.getElementById('txnDate').value;
+    var person = document.getElementById('txnPerson').value.trim();
+    if (!amount || amount <= 0) { showToast('Enter a valid amount', true); return; }
+    if (!date) { showToast('Select a date', true); return; }
+    if (!person) { showToast('Name is required', true); return; }
+    var btn = document.getElementById('txnSaveBtn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+        await db.collection('transactions').add({
+            type: currentTxnType,
+            amount: amount,
+            date: date,
+            person: person,
+            method: document.getElementById('txnMethod').value,
+            note: document.getElementById('txnNote').value.trim(),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        closeModal('txnModal');
+        showToast(currentTxnType === 'withdraw' ? 'Withdraw recorded!' : 'Deposit added!');
+    } catch (err) { showToast('Error: ' + err.message, true); }
+    btn.disabled = false; btn.textContent = 'Save';
+}
+
+function transferredFor(clientId) {
+    var s = 0;
+    txnsCache.forEach(function(t) {
+        if (t.type === 'deposit' && t.source === 'client' && t.clientId === clientId) s += Number(t.amount) || 0;
+    });
+    return s;
+}
+
+function clientNetReceived(clientId) {
+    return Math.max(0, clientMoney(clientId).received - transferredFor(clientId));
+}
+
+function openTransferModal(presetClientId) {
+    var availClients = clientsCache.filter(function(cl) { return clientNetReceived(cl._id) > 0; });
+    if (!availClients.length) { showToast('No received money available to transfer', true); return; }
+    availClients.sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || '')); });
+    var sel = document.getElementById('transferClientSelect');
+    sel.innerHTML = '';
+    availClients.forEach(function(cl) {
+        var opt = document.createElement('option');
+        opt.value = cl._id;
+        opt.textContent = cl.name + (cl.company ? ' (' + cl.company + ')' : '') + ' — ' + fmtBDT(clientNetReceived(cl._id)) + ' available';
+        sel.appendChild(opt);
+    });
+    var hasPreset = presetClientId && availClients.some(function(cl) { return cl._id === presetClientId; });
+    if (hasPreset) sel.value = presetClientId;
+    document.getElementById('transferClientName').textContent = '';
+    document.getElementById('transferDate').value = todayStr();
+    document.getElementById('transferMethod').value = 'Cash';
+    document.getElementById('transferNote').value = '';
+    selectTransferClient();
+    openModal('transferModal');
+}
+
+function selectTransferClient() {
+    var cid = document.getElementById('transferClientSelect').value;
+    var net = cid ? clientNetReceived(cid) : 0;
+    document.getElementById('transferAvail').textContent = fmtBDT(net);
+    document.getElementById('transferAmount').value = net;
+    document.getElementById('transferAmount').max = net;
+}
+
+async function saveTransfer() {
+    var clientId = document.getElementById('transferClientSelect').value;
+    var c = getClientById(clientId);
+    if (!c) { showToast('Select a client', true); return; }
+    var amount = Number(document.getElementById('transferAmount').value);
+    var date = document.getElementById('transferDate').value;
+    var avail = clientNetReceived(clientId);
+    if (!amount || amount <= 0) { showToast('Enter a valid amount', true); return; }
+    if (!date) { showToast('Select a date', true); return; }
+    if (amount > avail) { showToast('Amount exceeds available received money (' + fmtBDT(avail) + ')', true); return; }
+    var btn = document.getElementById('transferSaveBtn');
+    btn.disabled = true; btn.textContent = 'Transferring...';
+    try {
+        await db.collection('transactions').add({
+            type: 'deposit',
+            amount: amount,
+            date: date,
+            person: 'Client collection — ' + c.name,
+            method: document.getElementById('transferMethod').value,
+            note: document.getElementById('transferNote').value.trim(),
+            clientId: clientId,
+            source: 'client',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        closeModal('transferModal');
+        showToast(fmtBDT(amount) + ' transferred to Company Account!');
+    } catch (err) { showToast('Error: ' + err.message, true); }
+    btn.disabled = false; btn.textContent = 'Transfer';
+}
+
+// ============================================================
+// === REPORTS: CLIENT STATEMENT + CASHBOOK (PRINTABLE) ===
+// ============================================================
+
+function reportCompanyHeader(docTitle, rightExtraHtml) {
+    var comp = COMPANY_INFO;
+    var lp = comp.logoPos || 'left';
+    var lsz = Number(comp.logoSize) || 58;
+    var logoMargins = lp === 'center' ? '0 auto 12px' : (lp === 'right' ? '0 0 12px auto' : '0 0 12px');
+    var thm = accentTheme();
+    var cBody = inkHex('#1d1d1f');
+    var cMut = inkHex('#86868b');
+    var cSoft = inkHex('#424245');
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:1px solid #d2d2d7;">' +
+            '<div>' +
+                (comp.logo ? '<img src="' + esc(comp.logo) + '" alt="" style="display:block;height:' + lsz + 'px;width:auto;max-width:' + Math.round(lsz * 210 / 58) + 'px;object-fit:contain;margin:' + logoMargins + ';">' : '') +
+                '<div style="font-size:22px;font-weight:' + wt(700) + ';letter-spacing:-0.5px;color:' + cBody + ';">ADATA <span style="color:' + thm.css + ';font-weight:' + wt(600) + ';">CLOUD</span></div>' +
+                '<div style="font-size:11px;color:' + cMut + ';margin-top:3px;letter-spacing:0.2px;">' + esc(comp.tagline) + '</div>' +
+                '<table style="margin-top:14px;font-size:11px;border-collapse:collapse;line-height:1.9;">' +
+                    '<tr><td style="color:' + cMut + ';width:52px;padding:0;">Phone</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.phone) + '</td></tr>' +
+                    (comp.email ? '<tr><td style="color:' + cMut + ';padding:0;">Email</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.email) + '</td></tr>' : '') +
+                    (comp.web ? '<tr><td style="color:' + cMut + ';padding:0;">Web</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.web) + '</td></tr>' : '') +
+                    (comp.address ? '<tr><td style="color:' + cMut + ';padding:0;">Address</td><td style="padding:0;color:' + cSoft + ';">' + esc(comp.address) + '</td></tr>' : '') +
+                '</table>' +
+            '</div>' +
+            '<div style="text-align:right;">' +
+                '<div style="font-size:24px;font-weight:' + wt(600) + ';letter-spacing:-0.5px;color:' + cBody + ';">' + docTitle + '</div>' +
+                (rightExtraHtml || '') +
+            '</div>' +
+        '</div>';
+}
+
+function reportFooterHTML() {
+    var comp = COMPANY_INFO;
+    var cMut = inkHex('#86868b');
+    return '<div style="display:flex;justify-content:space-between;gap:40px;margin-top:40px;align-items:flex-end;">' +
+            '<div style="flex:1;font-size:11px;color:' + cMut + ';line-height:1.7;">This is a computer-generated statement from ' + esc(comp.name) + '.</div>' +
+            '<div style="text-align:center;min-width:190px;padding-top:52px;"><div style="border-top:1px solid #c7c7cc;padding-top:8px;font-size:11px;color:' + cMut + ';">Authorised Signature</div></div>' +
+        '</div>' +
+        '<div style="margin-top:32px;border-top:1px solid #d2d2d7;padding-top:14px;text-align:center;font-size:11px;color:' + cMut + ';letter-spacing:0.2px;">' + esc(comp.name) + ' &nbsp;&middot;&nbsp; ' + esc(comp.phone) + (comp.email ? ' &nbsp;&middot;&nbsp; ' + esc(comp.email) : '') + '</div>';
+}
+
+function buildClientStatementHTML(c) {
+    var pays = paymentsCache.filter(function(p) { return p.clientId === c._id; }).map(function(p) { return p; });
+    invoicesCache.forEach(function(inv) {
+        if (inv.clientId !== c._id) return;
+        var linked = 0;
+        paymentsCache.forEach(function(p) {
+            if (p.invoiceId === inv._id) linked += Number(p.amount) || 0;
+        });
+        var adv = Math.max(0, (Number(inv.paidAmount) || 0) - linked);
+        if (adv > 0) {
+            pays.push({
+                _synthetic: true,
+                date: inv.date,
+                invoiceNumber: inv.number,
+                amount: adv,
+                method: 'Advance',
+                note: 'Advance taken at billing time'
+            });
+        }
+    });
+    pays.sort(function(a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+    var m = clientMoney(c._id);
+    var thm = accentTheme();
+    var cBody = inkHex('#1d1d1f');
+    var cMid = inkHex('#6e6e73');
+    var cMut = inkHex('#86868b');
+    var cSoft = inkHex('#424245');
+    var rptTh = thm.css;
+
+    var rows = '';
+    if (!pays.length) rows = '<tr><td colspan="5" style="padding:28px;text-align:center;color:' + cMut + ';font-size:13px;">No payments recorded yet.</td></tr>';
+    pays.forEach(function(p, i) {
+        var methodCell = p.method === 'Advance'
+            ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.8px;padding:3px 10px;border-radius:100px;background:#fff7ed;color:#d97706;">ADVANCE</span>'
+            : esc(p.method || '-');
+        rows +=
+            '<tr>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;color:' + cMut + ';font-size:12px;text-align:center;">' + (i + 1) + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;font-weight:' + wt(500) + ';color:' + cBody + ';">' + formatDMY(p.date) + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;color:' + cSoft + ';">' + esc(p.invoiceNumber || 'General Payment') + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;color:' + cSoft + ';">' + methodCell + (p.note ? '<br><span style="font-size:11px;color:' + cMut + ';">' + esc(p.note) + '</span>' : '') + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;text-align:right;font-weight:' + wt(600) + ';color:#16a34a;">' + fmtBDT(p.amount) + '</td>' +
+            '</tr>';
+    });
+
+    return '<div style="max-width:720px;margin:0 auto;">' +
+        reportCompanyHeader('Payment Statement',
+            '<div style="margin-top:12px;background:#f5f5f7;border-radius:12px;padding:12px 18px;font-size:12px;color:' + cMid + ';text-align:right;">Generated on<br><span style="color:' + cBody + ';font-weight:' + wt(500) + ';">' + formatDMY(todayStr()) + '</span></div>') +
+        '<div style="background:#f5f5f7;border-radius:12px;padding:16px 18px;margin-top:26px;">' +
+            '<div style="font-size:10px;font-weight:' + wt(700) + ';letter-spacing:1.2px;color:' + cMut + ';margin-bottom:8px;">CLIENT</div>' +
+            '<div style="font-size:15px;font-weight:' + wt(600) + ';color:' + cBody + ';">' + esc(c.name) + '</div>' +
+            '<div style="font-size:12px;color:' + cMid + ';margin-top:3px;">' + esc(c.phone || '') + (c.company ? ' · ' + esc(c.company) : '') + (c.address ? '<br>' + esc(c.address) : '') + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:16px;margin-top:20px;">' +
+            '<div style="flex:1;background:#f5f5f7;border-radius:12px;padding:14px 16px;"><div style="font-size:10px;font-weight:' + wt(600) + ';letter-spacing:1px;color:' + cMut + ';text-transform:uppercase;">Total Billed</div><div style="font-size:17px;font-weight:' + wt(700) + ';margin-top:5px;color:' + cBody + ';">' + fmtBDT(m.billed) + '</div></div>' +
+            '<div style="flex:1;background:#f0fdf4;border-radius:12px;padding:14px 16px;"><div style="font-size:10px;font-weight:' + wt(600) + ';letter-spacing:1px;color:' + cMut + ';text-transform:uppercase;">Total Paid</div><div style="font-size:17px;font-weight:' + wt(700) + ';margin-top:5px;color:#16a34a;">' + fmtBDT(m.received) + '</div></div>' +
+            '<div style="flex:1;background:' + (m.due > 0 ? '#fef2f2' : '#f5f5f7') + ';border-radius:12px;padding:14px 16px;"><div style="font-size:10px;font-weight:' + wt(600) + ';letter-spacing:1px;color:' + cMut + ';text-transform:uppercase;">Due</div><div style="font-size:17px;font-weight:' + wt(700) + ';margin-top:5px;color:' + (m.due > 0 ? '#dc2626' : cBody) + ';">' + fmtBDT(m.due) + '</div></div>' +
+        '</div>' +
+        '<table style="width:100%;border-collapse:collapse;margin-top:28px;font-size:13px;">' +
+            '<thead><tr style="border-bottom:1px solid #d2d2d7;">' +
+                '<th style="padding:10px 8px;text-align:center;width:36px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">#</th>' +
+                '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Date</th>' +
+                '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Invoice</th>' +
+                '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Method / Note</th>' +
+                '<th style="padding:10px 8px;text-align:right;width:120px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Amount</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+        '<div style="display:flex;justify-content:flex-end;margin-top:14px;">' +
+            '<table style="min-width:280px;border-collapse:collapse;"><tr>' +
+                '<td style="padding:12px 16px;font-weight:' + wt(600) + ';text-align:right;font-size:13px;color:' + cBody + ';">Total Received</td>' +
+                '<td style="padding:12px 0;text-align:right;font-weight:' + wt(700) + ';font-size:19px;color:#16a34a;">' + fmtBDT(m.received) + '</td>' +
+            '</tr></table>' +
+        '</div>' +
+        reportFooterHTML() +
+    '</div>';
+}
+
+function openClientStatement(clientId) {
+    var c = getClientById(clientId);
+    if (!c) { showToast('Client not found', true); return; }
+    reportFitOnePage = true;
+    document.getElementById('reportPrintArea').innerHTML = buildClientStatementHTML(c);
+    openModal('reportModal');
+}
+
+function buildCashbookHTML() {
+    var comp = COMPANY_INFO;
+    var asc = txnsCache.slice().sort(function(a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+    var bal = 0;
+    var withBal = asc.map(function(t) {
+        bal += (t.type === 'withdraw' ? -1 : 1) * (Number(t.amount) || 0);
+        var o = {}; for (var k in t) o[k] = t[k]; o.bal = bal; return o;
+    }).reverse();
+    var tt = txnTotals();
+    var thm = accentTheme();
+    var cBody = inkHex('#1d1d1f');
+    var cMut = inkHex('#86868b');
+    var cSoft = inkHex('#424245');
+    var rptTh = thm.css;
+
+    var rows = '';
+    if (!withBal.length) rows = '<tr><td colspan="6" style="padding:28px;text-align:center;color:' + cMut + ';font-size:13px;">No transactions recorded yet.</td></tr>';
+    withBal.forEach(function(t, i) {
+        var isWd = t.type === 'withdraw';
+        rows +=
+            '<tr>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;color:' + cMut + ';font-size:12px;text-align:center;">' + (i + 1) + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;font-weight:' + wt(500) + ';color:' + cBody + ';">' + formatDMY(t.date) + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;"><span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.8px;padding:3px 10px;border-radius:100px;background:' + (isWd ? '#fef2f2;color:#dc2626;' : '#f0fdf4;color:#16a34a;') + ';">' + (isWd ? 'WITHDRAW' : 'DEPOSIT') + '</span><br><span style="font-size:12px;color:' + cSoft + ';">' + esc(t.person || '-') + '</span></td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;color:' + cSoft + ';">' + esc(t.method || '-') + (t.note ? '<br><span style="font-size:11px;color:' + cMut + ';">' + esc(t.note) + '</span>' : '') + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;text-align:right;font-weight:' + wt(600) + ';' + (isWd ? '' : 'color:#16a34a;') + '">' + (isWd ? '\u2014' : '+' + fmtBDT(t.amount)) + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;text-align:right;' + (isWd ? 'color:#dc2626;font-weight:' + wt(600) + ';' : '') + '">' + (isWd ? '\u2212' + fmtBDT(t.amount) : '\u2014') + '</td>' +
+                '<td style="padding:12px 14px;border-bottom:1px solid #e8e8ed;text-align:right;font-weight:' + wt(700) + ';color:' + (t.bal < 0 ? '#dc2626' : cBody) + ';">' + fmtBDT(t.bal) + '</td>' +
+            '</tr>';
+    });
+
+    return '<div style="max-width:760px;margin:0 auto;">' +
+        reportCompanyHeader('Cash Book',
+            '<div style="margin-top:12px;background:#f5f5f7;border-radius:12px;padding:12px 18px;font-size:12px;color:' + cMut + ';text-align:right;">Generated on<br><span style="color:' + cBody + ';font-weight:' + wt(500) + ';">' + formatDMY(todayStr()) + '</span></div>') +
+        '<div style="display:flex;gap:16px;margin-top:26px;">' +
+            '<div style="flex:1;background:#f0fdf4;border-radius:12px;padding:14px 16px;"><div style="font-size:10px;font-weight:' + wt(600) + ';letter-spacing:1px;color:' + cMut + ';text-transform:uppercase;">Total Deposit</div><div style="font-size:17px;font-weight:' + wt(700) + ';margin-top:5px;color:#16a34a;">' + fmtBDT(tt.deposit) + '</div></div>' +
+            '<div style="flex:1;background:#fef2f2;border-radius:12px;padding:14px 16px;"><div style="font-size:10px;font-weight:' + wt(600) + ';letter-spacing:1px;color:' + cMut + ';text-transform:uppercase;">Total Withdraw</div><div style="font-size:17px;font-weight:' + wt(700) + ';margin-top:5px;color:#dc2626;">' + fmtBDT(tt.withdraw) + '</div></div>' +
+            '<div style="flex:1;background:#f5f5f7;border-radius:12px;padding:14px 16px;"><div style="font-size:10px;font-weight:' + wt(600) + ';letter-spacing:1px;color:' + cMut + ';text-transform:uppercase;">Current Balance</div><div style="font-size:17px;font-weight:' + wt(700) + ';margin-top:5px;color:' + (tt.balance < 0 ? '#dc2626' : thm.css) + ';">' + fmtBDT(tt.balance) + '</div></div>' +
+        '</div>' +
+        '<table style="width:100%;border-collapse:collapse;margin-top:28px;font-size:13px;">' +
+            '<thead><tr style="border-bottom:1px solid #d2d2d7;">' +
+                '<th style="padding:10px 8px;text-align:center;width:36px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">#</th>' +
+                '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Date</th>' +
+                '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Type / By</th>' +
+                '<th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Method / Note</th>' +
+                '<th style="padding:10px 8px;text-align:right;width:100px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">In (+)</th>' +
+                '<th style="padding:10px 8px;text-align:right;width:100px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Out (\u2212)</th>' +
+                '<th style="padding:10px 8px;text-align:right;width:110px;font-size:11px;font-weight:' + wt(600) + ';letter-spacing:0.5px;color:' + rptTh + ';text-transform:uppercase;">Balance</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+        reportFooterHTML() +
+    '</div>';
+}
+
+function openCashbookReport() {
+    reportFitOnePage = false;
+    document.getElementById('reportPrintArea').innerHTML = buildCashbookHTML();
+    openModal('reportModal');
+}
+
+var reportFitOnePage = false;
+
+function printCurrentReport() {
+    var area = document.getElementById('reportPrintArea');
+    var inner = area ? area.firstElementChild : null;
+    if (!inner) return;
+    printViaRoot(inner, reportFitOnePage ? 1040 : null, 0.45);
+}
 
 // ============================================================
 // === SIDEBAR: COLLAPSE PIN + MENU REORDER ===
