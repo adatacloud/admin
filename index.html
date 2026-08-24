@@ -366,6 +366,10 @@
                 <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                 Clients
             </div>
+            <div class="nav-item" onclick="showSection('serverControl', this)">
+                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                Server Setup
+            </div>
             <div class="nav-item" onclick="showSection('invoices', this)">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 Invoices
@@ -622,6 +626,31 @@
             <div id="clientsEmpty" class="empty-state hidden">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                 <p class="text-sm">No clients yet. Add your first client!</p>
+            </div>
+        </div>
+
+        <!-- ===== SERVER CONTROL (CLIENT ADATA CLOUD SERVERS) ===== -->
+        <div id="section-serverControl" class="section">
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold">Adata Cloud Server Setup</h1>
+                    <p class="text-sm text-dark-400 mt-1">Connect client servers &amp; remotely enable/disable their applications</p>
+                </div>
+                <button onclick="openAddServerModal()" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Server
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="stat-card"><div class="text-lg font-bold text-white" id="srvStatTotal">0</div><div class="text-xs text-dark-400 mt-1">Connected Servers</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="srvStatOnline">0</div><div class="text-xs text-dark-400 mt-1">Online Now</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#ef4444;" id="srvStatDisabled">0</div><div class="text-xs text-dark-400 mt-1">Disabled Apps</div></div>
+            </div>
+            <input type="text" id="serverSearch" class="input-field mb-4" placeholder="Search by server / client name..." oninput="renderServers()">
+            <div id="serversList" class="space-y-4"></div>
+            <div id="serversEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                <p class="text-sm">No servers connected yet. Add your first client server!</p>
             </div>
         </div>
 
@@ -1649,6 +1678,106 @@
     </div>
 </div>
 
+<!-- ========== ADD SERVER MODAL ========== -->
+<div class="modal-overlay" id="addServerModal">
+    <div class="modal-content p-7">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-semibold">Connect Adata Cloud Server</h2>
+            <button onclick="closeModal('addServerModal')" class="text-dark-500 hover:text-white text-xl leading-none">&times;</button>
+        </div>
+
+        <!-- Step 1: Config form -->
+        <div id="serverFormStep">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Server Name *</label>
+                    <input type="text" id="srvName" class="input-field" placeholder="e.g. Shop No-1 Server">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Client Name *</label>
+                    <input type="text" id="srvClientName" class="input-field" placeholder="e.g. Rahim Traders">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Client's Firebase Project ID *</label>
+                    <input type="text" id="srvProjectId" class="input-field" placeholder="e.g. mrtdcoldstorage">
+                    <p class="text-xs text-dark-500 mt-1">ক্লায়েন্টের নিজের আলাদা Firebase project — এখানেই command ও status যাবে।</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Client's Firebase Web API Key *</label>
+                    <input type="text" id="srvApiKey" class="input-field" placeholder="AIzaSy...">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Secret Key (command verification)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="srvSecret" class="input-field" readonly style="font-family:monospace;font-size:0.75rem;">
+                        <button type="button" onclick="regenerateSecret()" class="btn-ghost whitespace-nowrap">Regenerate</button>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-dark-500 mt-4 leading-relaxed">Save করার পর একটা <b style="color:#a3a3a3;">Setup Code</b> তৈরি হবে — সেটা ক্লায়েন্টকে দিন, ক্লায়েন্ট তার Adata Cloud Server-এর Settings-এ বসিয়ে দিলেই সংযোগ হয়ে যাবে।</p>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal('addServerModal')" class="btn-ghost">Cancel</button>
+                <button onclick="saveServer()" class="btn-primary" id="saveServerBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Save &amp; Generate Setup Code
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Setup code -->
+        <div id="serverCodeStep" class="hidden">
+            <div class="p-4 rounded-xl mb-4" style="background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2);">
+                <p class="text-sm" style="color:#22c55e;">✓ Server saved! নিচের Setup Code টা কপি করে ক্লায়েন্টকে দিন।</p>
+            </div>
+            <label class="block text-xs font-medium text-dark-400 mb-1.5">Setup Code</label>
+            <textarea id="setupCodeBox" class="input-field" rows="6" readonly style="font-family:monospace;font-size:0.7rem;word-break:break-all;"></textarea>
+            <p class="text-xs text-dark-500 mt-2">ক্লায়েন্ট তার Adata Cloud Server-এর Settings → Firebase Setup ঘরে এই কোডটা বসাবে।</p>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="copySetupCode()" class="btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    Copy Setup Code
+                </button>
+                <button onclick="closeModal('addServerModal')" class="btn-ghost">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== REMOTE ADMIN CREDENTIALS MODAL ========== -->
+<div class="modal-overlay" id="credsModal">
+    <div class="modal-content p-7" style="max-width:480px;">
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="font-semibold">Change Admin Login</h2>
+            <button onclick="closeModal('credsModal')" class="text-dark-500 hover:text-white text-xl leading-none">&times;</button>
+        </div>
+        <p class="text-xs text-dark-500 mb-5">Remote change for: <b id="credsServerLabel" style="color:#a3a3a3;"></b></p>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">New Username</label>
+                <input type="text" id="credUsername" class="input-field" placeholder="Leave empty to keep current username" autocomplete="off">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">New Password</label>
+                <input type="password" id="credPassword" class="input-field" placeholder="Min 6 characters — leave empty to keep current password" autocomplete="new-password">
+            </div>
+            <div id="credPasswordWrap">
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Confirm Password</label>
+                <input type="password" id="credPassword2" class="input-field" placeholder="Repeat new password" autocomplete="new-password">
+            </div>
+        </div>
+
+        <div class="mt-4 px-3 py-2.5 rounded-lg text-xs leading-relaxed" style="background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.22); color:#eab308;">
+            ⚠ এটা ক্লায়েন্টের Adata Cloud Server manager login। Change হওয়ার সাথে সাথে পুরনো session গুলোও বন্ধ হয়ে যাবে। ভুল করলে client lock-out হতে পারে!
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal('credsModal')" class="btn-ghost">Cancel</button>
+            <button onclick="sendCredsCommand()" class="btn-primary">Send Change Command</button>
+        </div>
+    </div>
+</div>
+
 <!-- ========== SCRIPTS ========== -->
 <script>
 // === FIREBASE CONFIG ===
@@ -2266,6 +2395,7 @@ function loadAllData() {
     loadPayments();
     loadTransactions();
     loadInvoiceSettings();
+    loadServers();
 }
 
 // ============================================================
@@ -4403,6 +4533,425 @@ function printCurrentReport() {
     if (!inner) return;
     printViaRoot(inner, reportFitOnePage ? 1040 : null, 0.45);
 }
+
+// ============================================================
+// === SERVER CONTROL: CLIENT ADATA CLOUD SERVERS (FIRESTORE BRIDGE) ===
+// Multi-project design:
+//   - Panel's own Firestore  -> registry only (name/client/project/key/secret)
+//   - Client's own Firestore -> live status + commands (per-client project)
+// ============================================================
+
+var serversCache = [];
+var serverRemote = {};   // registry _id -> { app, db, unsub }
+var SERVER_ONLINE_WINDOW_MS = 90000;
+
+function loadServers() {
+    db.collection('adata_servers').onSnapshot(function(snap) {
+        var seen = {};
+        var rows = [];
+        snap.forEach(function(d) {
+            var data = d.data();
+            data._id = d.id;
+            rows.push(data);
+            seen[d.id] = true;
+        });
+        serversCache = rows;
+        rows.forEach(attachRemoteListener);
+        // detach listeners of removed registry entries
+        Object.keys(serverRemote).forEach(function(id) {
+            if (!seen[id]) {
+                try { serverRemote[id].unsub && serverRemote[id].unsub(); } catch (e) {}
+                try {
+                    var appName = 'srv_' + String(id).replace(/[^a-zA-Z0-9_-]/g, '');
+                    var existing = (firebase.apps || []).filter(function(a) { return a.name === appName; })[0];
+                    if (existing) existing.delete();
+                } catch (e) {}
+                delete serverRemote[id];
+            }
+        });
+        renderServers();
+        updateServerStats();
+    }, function(err) { console.error('Servers load error:', err); });
+}
+
+function remoteDocPath(s) {
+    return (s.serverId && String(s.serverId)) || s._id;
+}
+
+function attachRemoteListener(s) {
+    if (!s.projectId || !s.apiKey || serverRemote[s._id]) return;
+    var appName = 'srv_' + String(s._id).replace(/[^a-zA-Z0-9_-]/g, '');
+    var app;
+    try {
+        app = firebase.initializeApp({ apiKey: s.apiKey, projectId: s.projectId }, appName);
+    } catch (e) {
+        var existing = (firebase.apps || []).filter(function(a) { return a.name === appName; })[0];
+        if (!existing) return;
+        app = existing;
+    }
+    var rdb = app.firestore();
+    var entry = { app: app, db: rdb, unsub: null };
+    serverRemote[s._id] = entry;
+    entry.unsub = rdb.collection('adata_servers').doc(remoteDocPath(s)).onSnapshot(function(doc) {
+        var live = doc.exists ? doc.data() : null;
+        s.live = live;
+        if (live) {
+            s.last_seen = live.last_seen || null;
+            s.apps = Array.isArray(live.apps) ? live.apps : [];
+            s.admin_username = live.admin_username || '';
+            s.version = live.version || s.version;
+            s.last_command = live.last_command || null;
+        }
+        renderServers();
+        updateServerStats();
+    }, function(err) {
+        console.warn('Remote listen failed for', s.name, err.code || err.message);
+    });
+}
+
+function getRemoteDb(s) {
+    var entry = serverRemote[s._id];
+    return entry ? entry.db : null;
+}
+
+function isServerOnline(s) {
+    return !!s.last_seen && (Date.now() - Number(s.last_seen)) < SERVER_ONLINE_WINDOW_MS;
+}
+
+function timeAgoStr(ms) {
+    if (!ms) return 'never';
+    var diff = Date.now() - Number(ms);
+    if (diff < 0) diff = 0;
+    if (diff < 60000) return Math.floor(diff / 1000) + 's ago';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    return Math.floor(diff / 86400000) + 'd ago';
+}
+
+function isCommandPending(s) {
+    if (!s.pendingIssuedAt) return false;
+    if (Date.now() - s.pendingIssuedAt > 120000) return false;
+    var ack = s.last_command;
+    return !(ack && Number(ack.at) >= s.pendingIssuedAt);
+}
+
+function updateServerStats() {
+    var total = serversCache.length;
+    var online = 0, disabled = 0;
+    serversCache.forEach(function(s) {
+        if (isServerOnline(s)) online++;
+        if (Array.isArray(s.apps)) s.apps.forEach(function(a) {
+            if (String(a.status).toLowerCase() === 'disabled') disabled++;
+        });
+    });
+    document.getElementById('srvStatTotal').textContent = total;
+    document.getElementById('srvStatOnline').textContent = online;
+    document.getElementById('srvStatDisabled').textContent = disabled;
+}
+
+function renderServers() {
+    var listEl = document.getElementById('serversList');
+    var emptyEl = document.getElementById('serversEmpty');
+    if (!listEl || !emptyEl) return;
+
+    var q = '';
+    var searchEl = document.getElementById('serverSearch');
+    if (searchEl) q = searchEl.value.trim().toLowerCase();
+
+    var rows = serversCache.filter(function(s) {
+        if (!q) return true;
+        return String(s.name || '').toLowerCase().indexOf(q) !== -1 ||
+               String(s.clientName || '').toLowerCase().indexOf(q) !== -1;
+    }).sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || '')); });
+
+    emptyEl.classList.toggle('hidden', serversCache.length > 0);
+    listEl.innerHTML = '';
+
+    rows.forEach(function(s) {
+        var card = document.createElement('div');
+        card.className = 'glass-card p-5';
+
+        var online = isServerOnline(s);
+        var dotColor = online ? '#22c55e' : '#525252';
+        var statusText = online ? 'Online' : 'Offline · seen ' + timeAgoStr(s.last_seen);
+
+        var headHtml =
+            '<div class="flex items-start justify-between flex-wrap gap-3">' +
+                '<div class="flex items-center gap-3">' +
+                    '<div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(79,157,255,0.1); border:1px solid rgba(79,157,255,0.2);">' +
+                        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4F9DFF" stroke-width="1.6"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>' +
+                    '</div>' +
+                    '<div>' +
+                        '<div class="font-semibold text-sm flex items-center gap-2">' + esc(s.name || 'Unnamed Server') +
+                            '<span class="flex items-center gap-1.5 text-xs font-normal" style="color:' + (online ? '#22c55e' : '#737373') + ';"><span style="width:7px;height:7px;border-radius:50%;display:inline-block;background:' + dotColor + ';' + (online ? 'box-shadow:0 0 6px rgba(34,197,94,0.7);' : '') + '"></span>' + statusText + '</span>' +
+                        '</div>' +
+                        '<div class="text-xs text-dark-400 mt-0.5">' + esc(s.clientName || '-') + ' &middot; project: <span style="font-family:monospace;">' + esc(s.projectId || '-') + '</span>' + (s.version ? ' &middot; v' + esc(s.version) : '') + (s.admin_username ? ' &middot; admin: <span style="font-family:monospace;color:#a3a3a3;">' + esc(s.admin_username) + '</span>' : '') + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="flex gap-2">' +
+                    '<button class="btn-ghost text-xs py-1.5" onclick="openCredsModal(\'' + s._id + '\')" style="border-color:rgba(79,157,255,0.3);color:#4F9DFF;">Credentials</button>' +
+                    '<button class="btn-ghost text-xs py-1.5" onclick="showSetupCodeForServer(\'' + s._id + '\')" title="Show Setup Code again">Setup Code</button>' +
+                    '<button class="btn-ghost text-xs py-1.5" onclick="sendBackupCommand(\'' + s._id + '\')" title="Create USB backup remotely" style="border-color:rgba(34,197,94,0.3);color:#22c55e;">Backup</button>' +
+                    '<button class="btn-danger text-xs py-1.5" onclick="deleteServer(\'' + s._id + '\')">Remove</button>' +
+                '</div>' +
+            '</div>';
+
+        var cmdLine = '';
+        if (isCommandPending(s)) {
+            cmdLine =
+                '<div class="mt-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.25); color:#eab308;">' +
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+                    'Waiting for server&hellip; — sent ' + timeAgoStr(s.pendingIssuedAt) +
+                '</div>';
+        } else if (s.last_command && s.last_command.at && s.last_command.action) {
+            var ok = s.last_command.ok !== false;
+            cmdLine =
+                '<div class="mt-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.18); color:' + (ok ? '#22c55e' : '#ef4444') + ';">' +
+                    (ok
+                        ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+                        : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>') +
+                    'Last command: ' + esc(s.last_command.action || '') + (s.last_command.appId ? ' → ' + esc(s.last_command.appId) : '') +
+                    (s.last_command.error ? ' — error: ' + esc(s.last_command.error) : ' — done ' + timeAgoStr(s.last_command.at)) +
+                '</div>';
+        }
+
+        var appsHtml = '';
+        if (!online && (!Array.isArray(s.apps) || !s.apps.length)) {
+            appsHtml =
+                '<div class="mt-4 px-4 py-5 rounded-xl text-center text-xs text-dark-500" style="border:1px dashed rgba(255,255,255,0.1);">' +
+                    'No report yet — ক্লায়েন্টের Adata Cloud Server Settings-এ Setup Code বসানো হয়েছে কিনা দেখুন।' +
+                '</div>';
+        } else {
+            var appRows = '';
+            (s.apps || []).slice().sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || '')); }).forEach(function(a) {
+                var enabled = String(a.status).toLowerCase() !== 'disabled';
+                appRows +=
+                    '<div class="table-row flex items-center justify-between py-2.5 px-1">' +
+                        '<div class="flex items-center gap-3 min-w-0">' +
+                            '<span style="width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;background:' + (enabled ? '#22c55e' : '#ef4444') + ';"></span>' +
+                            '<div class="min-w-0">' +
+                                '<div class="text-sm font-medium truncate">' + esc(a.name || a.appId || 'App') + '</div>' +
+                                '<div class="text-xs text-dark-500 truncate" style="font-family:monospace;">' + esc(a.appId || '') + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<label class="ios-switch-wrap" title="' + (enabled ? 'Disable' : 'Enable') + ' this app remotely">' +
+                            '<input type="checkbox" class="ios-switch"' + (enabled ? ' checked' : '') + ' onchange="sendAppCommand(\'' + s._id + '\', \'' + esc(String(a.appId || '')) + '\', this.checked)">' +
+                            '<span class="ios-slider"></span>' +
+                        '</label>' +
+                    '</div>';
+            });
+            appsHtml =
+                '<div class="mt-4 rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);">' +
+                    '<div class="px-4 pt-3 pb-1 flex items-center justify-between">' +
+                        '<span class="text-xs font-semibold text-dark-400 uppercase tracking-wider">Applications (' + (s.apps || []).length + ')</span>' +
+                        '<span class="text-xs text-dark-500">Toggle = remote enable/disable</span>' +
+                    '</div>' +
+                    '<div class="px-3 pb-2">' + (appRows || '<div class="py-4 text-center text-xs text-dark-500">Connected, but no apps reported yet.</div>') + '</div>' +
+                '</div>';
+        }
+
+        card.innerHTML = headHtml + cmdLine + appsHtml;
+        listEl.appendChild(card);
+    });
+}
+
+// --- Commands (written into the client's own Firebase project) ---
+
+function pushCommand(s, command, doneMsg) {
+    var rdb = getRemoteDb(s);
+    if (!rdb) { showToast('Client project connection not ready — try again in a moment', true); return; }
+    command.id = 'cmd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    command.cmd_secret = s.secret || '';
+    command.by = currentUser && currentUser.email ? currentUser.email : 'admin';
+    command.issuedAt = Date.now();
+
+    rdb.collection('adata_servers').doc(remoteDocPath(s)).set({ pending_command: command }, { merge: true })
+        .then(function() {
+            s.pendingIssuedAt = command.issuedAt;
+            showToast(doneMsg);
+            renderServers();
+        })
+        .catch(function(err) { showToast('Error: ' + err.message, true); });
+}
+
+function sendAppCommand(docId, appId, enable) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s) { showToast('Server not found', true); renderServers(); return; }
+    pushCommand(s, {
+        action: enable ? 'app_enable' : 'app_disable',
+        appId: appId,
+        username: '',
+        password: ''
+    }, (enable ? 'Enable' : 'Disable') + ' command sent to "' + (s.name || 'server') + '"');
+}
+
+function sendBackupCommand(docId) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s) { showToast('Server not found', true); renderServers(); return; }
+    var drive = prompt('Enter USB drive letter for backup (e.g. D):\n\nপ্রথমবার backup দিলে ওই drive-এ "AdataCloudBackups" folder-এ সেভ হবে এবং automatic daily backup-ও ওই drive-এই চালু হয়ে যাবে।');
+    if (!drive || !drive.match(/^[A-Za-z]$/)) { showToast('Valid drive letter required (e.g. D)', true); return; }
+    pushCommand(s, {
+        action: 'backup_usb',
+        drive: drive.toUpperCase(),
+        appId: '',
+        username: '',
+        password: ''
+    }, 'Backup command sent to "' + (s.name || 'server') + '" — check server logs');
+}
+
+
+function deleteServer(docId) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!window.confirm('Remove "' + ((s && s.name) || 'this server') + '" from Server Control?')) return;
+    db.collection('adata_servers').doc(docId).delete()
+        .then(function() { showToast('Server removed'); })
+        .catch(function(err) { showToast('Error: ' + err.message, true); });
+}
+
+// --- Add server / setup code ---
+
+var currentSetupCode = '';
+
+function randomSecret() {
+    var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    var out = '';
+    var bytes = new Uint8Array(40);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(bytes);
+    } else {
+        for (var i = 0; i < 40; i++) bytes[i] = Math.floor(Math.random() * 256);
+    }
+    for (var i = 0; i < 40; i++) out += chars.charAt(bytes[i] % chars.length);
+    return out;
+}
+
+function regenerateSecret() {
+    document.getElementById('srvSecret').value = randomSecret();
+}
+
+function openAddServerModal() {
+    document.getElementById('srvName').value = '';
+    document.getElementById('srvClientName').value = '';
+    document.getElementById('srvProjectId').value = '';
+    document.getElementById('srvApiKey').value = '';
+    regenerateSecret();
+    document.getElementById('serverFormStep').classList.remove('hidden');
+    document.getElementById('serverCodeStep').classList.add('hidden');
+    openModal('addServerModal');
+}
+
+function buildSetupCode(s) {
+    return btoa(JSON.stringify({
+        v: 2,
+        serverId: s.serverId,
+        docId: s.serverId,
+        projectId: s.projectId,
+        apiKey: s.apiKey,
+        secret: s.secret
+    }));
+}
+
+function saveServer() {
+    var name = document.getElementById('srvName').value.trim();
+    var clientName = document.getElementById('srvClientName').value.trim();
+    var projectId = document.getElementById('srvProjectId').value.trim();
+    var apiKey = document.getElementById('srvApiKey').value.trim();
+    var secret = document.getElementById('srvSecret').value.trim();
+
+    if (!name || !clientName || !projectId || !apiKey) {
+        showToast('সব * চিহ্নিত ঘর পূরণ করুন', true);
+        return;
+    }
+
+    var btn = document.getElementById('saveServerBtn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+
+    var serverId = 'srv_' + randomSecret().slice(0, 12).toLowerCase();
+    var record = {
+        serverId: serverId,
+        name: name,
+        clientName: clientName,
+        projectId: projectId,
+        apiKey: apiKey,
+        secret: secret,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: currentUser && currentUser.email ? currentUser.email : 'admin'
+    };
+
+    db.collection('adata_servers').add(record).then(function(ref) {
+        currentSetupCode = buildSetupCode(record);
+        document.getElementById('setupCodeBox').value = currentSetupCode;
+        document.getElementById('serverFormStep').classList.add('hidden');
+        document.getElementById('serverCodeStep').classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Save &amp; Generate Setup Code';
+    }).catch(function(err) {
+        showToast('Error: ' + err.message, true);
+        btn.disabled = false;
+    });
+}
+
+function showSetupCodeForServer(docId) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s) return;
+    try { currentSetupCode = buildSetupCode(s); } catch (e) { currentSetupCode = ''; }
+    document.getElementById('setupCodeBox').value = currentSetupCode;
+    document.getElementById('serverFormStep').classList.add('hidden');
+    document.getElementById('serverCodeStep').classList.remove('hidden');
+    openModal('addServerModal');
+}
+
+function copySetupCode() {
+    var code = document.getElementById('setupCodeBox').value;
+    if (!code) return;
+    function fallbackCopy() {
+        var ta = document.getElementById('setupCodeBox');
+        ta.select();
+        try { document.execCommand('copy'); showToast('Setup Code copied!'); } catch (e) { showToast('Copy failed — manually select & copy', true); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function() { showToast('Setup Code copied!'); }, fallbackCopy);
+    } else fallbackCopy();
+}
+
+// --- Remote admin credentials change ---
+
+var credsTargetId = '';
+
+function openCredsModal(docId) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s) { showToast('Server not found', true); return; }
+    credsTargetId = docId;
+    document.getElementById('credsServerLabel').textContent = (s.name || 'Server') + ' (' + (s.clientName || '-') + ')';
+    document.getElementById('credUsername').value = '';
+    document.getElementById('credPassword').value = '';
+    document.getElementById('credPassword2').value = '';
+    openModal('credsModal');
+}
+
+function sendCredsCommand() {
+    var s = serversCache.find(function(x) { return x._id === credsTargetId; });
+    if (!s) { showToast('Server not found', true); closeModal('credsModal'); return; }
+
+    var username = document.getElementById('credUsername').value.trim();
+    var password = document.getElementById('credPassword').value;
+    var password2 = document.getElementById('credPassword2').value;
+
+    if (username && username.length < 3) { showToast('Username must be at least 3 characters', true); return; }
+    if (password && password.length < 6) { showToast('Password must be at least 6 characters', true); return; }
+    if (password && password !== password2) { showToast('Passwords do not match', true); return; }
+    if (!username && !password) { showToast('কিছু একটা দিন — username অথবা password', true); return; }
+
+    pushCommand(s, {
+        action: 'set_admin_credentials',
+        appId: '',
+        username: username || '',
+        password: password || ''
+    }, 'Credentials change command sent — server connects within ~10s');
+
+    closeModal('credsModal');
+}
+
 
 // ============================================================
 // === SIDEBAR: COLLAPSE PIN + MENU REORDER ===
