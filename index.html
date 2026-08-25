@@ -370,6 +370,14 @@
                 <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
                 Server Setup
             </div>
+            <div class="nav-item" onclick="showSection('serverApps', this)">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Server Apps
+            </div>
+            <div class="nav-item" onclick="showSection('serverStorage', this)">
+                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                Server Storage
+            </div>
             <div class="nav-item" onclick="showSection('invoices', this)">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 Invoices
@@ -467,15 +475,15 @@
                     <div class="text-xs text-dark-400 mt-1">Clients</div>
                 </div>
                 <div class="stat-card">
-                    <div class="text-xl lg:text-2xl font-bold text-white" id="statTotalBilled">৳0</div>
+                    <div class="text-xl lg:text-2xl font-bold text-white" id="statTotalBilled">$0</div>
                     <div class="text-xs text-dark-400 mt-1">Total Billed (Invoice)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="text-xl lg:text-2xl font-bold" style="color:#22c55e;" id="statReceived">৳0</div>
+                    <div class="text-xl lg:text-2xl font-bold" style="color:#22c55e;" id="statReceived">$0</div>
                     <div class="text-xs text-dark-400 mt-1">Received (Payment)</div>
                 </div>
                 <div class="stat-card" style="border-color:rgba(239,68,68,0.25);">
-                    <div class="text-xl lg:text-2xl font-bold" style="color:#ef4444;" id="statDue">৳0</div>
+                    <div class="text-xl lg:text-2xl font-bold" style="color:#ef4444;" id="statDue">$0</div>
                     <div class="text-xs text-dark-400 mt-1">Due (Will Receive)</div>
                 </div>
             </div>
@@ -616,10 +624,10 @@
                 </div>
             </div>
             <div id="clientsSummaryRow" class="grid grid-cols-4 gap-4 mb-6">
-                <div class="stat-card"><div class="text-lg font-bold text-white" id="clientSumBilled">৳0</div><div class="text-xs text-dark-400 mt-1">Total Billed</div></div>
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="clientSumReceived">৳0</div><div class="text-xs text-dark-400 mt-1">Total Received</div></div>
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#ef4444;" id="clientSumDue">৳0</div><div class="text-xs text-dark-400 mt-1">Total Due</div></div>
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#a855f7;" id="clientSumMonthly">৳0</div><div class="text-xs text-dark-400 mt-1">Monthly Subscriptions</div></div>
+                <div class="stat-card"><div class="text-lg font-bold text-white" id="clientSumBilled">$0</div><div class="text-xs text-dark-400 mt-1">Total Billed</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="clientSumReceived">$0</div><div class="text-xs text-dark-400 mt-1">Total Received</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#ef4444;" id="clientSumDue">$0</div><div class="text-xs text-dark-400 mt-1">Total Due</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#a855f7;" id="clientSumMonthly">$0</div><div class="text-xs text-dark-400 mt-1">Monthly Subscriptions</div></div>
             </div>
             <input type="text" id="clientSearch" class="input-field mb-4" placeholder="Search client by name / phone / company..." oninput="renderClients()">
             <div id="clientsList" class="space-y-4"></div>
@@ -651,6 +659,75 @@
             <div id="serversEmpty" class="empty-state hidden">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
                 <p class="text-sm">No servers connected yet. Add your first client server!</p>
+            </div>
+        </div>
+
+        <!-- ===== SERVER APPS ===== -->
+        <div id="section-serverApps" class="section">
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold">Server Applications</h1>
+                    <p class="text-sm text-dark-400 mt-1">Client server apps — App ID, API Key &amp; Server URL — create/delete remotely</p>
+                </div>
+                <button onclick="newRemoteApp()" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Application
+                </button>
+            </div>
+            <div class="glass-card p-5 mb-6">
+                <label class="text-xs text-dark-400 uppercase tracking-wider font-semibold">Select Server</label>
+                <select id="saServerSelect" class="input-field mt-2" onchange="renderServerApps()"></select>
+                <div id="saServerInfo" class="mt-4"></div>
+            </div>
+            <div id="saAppsList" class="space-y-3"></div>
+            <div id="saAppsEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <p class="text-sm">Select a server to view its applications.</p>
+            </div>
+        </div>
+
+        <!-- ===== SERVER STORAGE ===== -->
+        <div id="section-serverStorage" class="section">
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold">Server Storage</h1>
+                    <p class="text-sm text-dark-400 mt-1">Storage usage on each Adata Cloud Server</p>
+                </div>
+            </div>
+            <div class="glass-card p-5 mb-6">
+                <label class="text-xs text-dark-400 uppercase tracking-wider font-semibold">Select Server</label>
+                <select id="ssServerSelect" class="input-field mt-2" onchange="renderStorageStats()"></select>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-dark-400 mb-1">From date</label>
+                        <input type="date" id="ssFromDate" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-dark-400 mb-1">To date</label>
+                        <input type="date" id="ssToDate" class="input-field">
+                    </div>
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <button onclick="generateStorageReport()" class="btn-primary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Report
+                    </button>
+                    <button onclick="resetStorageReport()" class="btn-ghost">Reset</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#4F9DFF;" id="ssTotal">&mdash;</div><div class="text-xs text-dark-400 mt-1">Total Data</div></div>
+                <div class="stat-card"><div class="text-lg font-bold text-white" id="ssDb">&mdash;</div><div class="text-xs text-dark-400 mt-1">Database</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="ssUploads">&mdash;</div><div class="text-xs text-dark-400 mt-1">Uploads / Files</div></div>
+            </div>
+            <div class="glass-card p-4">
+                <p class="text-xs text-dark-500" id="ssUpdated">Waiting for server report&hellip; (server bridge update required for live numbers)</p>
+            </div>
+            <div id="ssReportArea" class="mt-6 hidden">
+                <div class="glass-card p-6">
+                    <h3 class="text-sm font-semibold mb-4">Storage Report</h3>
+                    <div id="ssReportContent"></div>
+                </div>
             </div>
         </div>
 
@@ -723,9 +800,9 @@
             </div>
 
             <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="accTotalDeposit">৳0</div><div class="text-xs text-dark-400 mt-1">Total Deposit</div></div>
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#ef4444;" id="accTotalWithdraw">৳0</div><div class="text-xs text-dark-400 mt-1">Total Withdraw</div></div>
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#4F9DFF;" id="accBalance">৳0</div><div class="text-xs text-dark-400 mt-1">Current Balance</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="accTotalDeposit">$0</div><div class="text-xs text-dark-400 mt-1">Total Deposit</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#ef4444;" id="accTotalWithdraw">$0</div><div class="text-xs text-dark-400 mt-1">Total Withdraw</div></div>
+                <div class="stat-card"><div class="text-lg font-bold" style="color:#4F9DFF;" id="accBalance">$0</div><div class="text-xs text-dark-400 mt-1">Current Balance</div></div>
             </div>
 
             <div id="txnFilterRow" class="flex flex-wrap gap-2 mb-6">
@@ -1142,7 +1219,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-dark-400 mb-1.5">Price *</label>
-                    <input type="text" id="packagePrice" class="input-field" placeholder="e.g. ৳9,999" required>
+                    <input type="text" id="packagePrice" class="input-field" placeholder="e.g. $9,999" required>
                 </div>
             </div>
             <div>
@@ -1252,7 +1329,7 @@
                 <input type="text" id="clientCompany" class="input-field" placeholder="e.g. Rahim Enterprise">
             </div>
             <div>
-                <label class="block text-xs font-medium text-dark-400 mb-1.5">Monthly Software Subscription (৳)</label>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Monthly Software Subscription ($)</label>
                 <input type="number" id="clientMonthly" class="input-field" min="0" step="any" placeholder="e.g. 500 — leave empty if none">
             </div>
             <div>
@@ -1330,7 +1407,7 @@
                 <div class="grid gap-2" style="grid-template-columns:1fr 70px 100px 110px 36px;" id="invItemHeader">
                     <div class="text-xs text-dark-500 px-1">Description</div>
                     <div class="text-xs text-dark-500 px-1 text-right">Qty</div>
-                    <div class="text-xs text-dark-500 px-1 text-right">Rate (৳)</div>
+                    <div class="text-xs text-dark-500 px-1 text-right">Rate ($)</div>
                     <div class="text-xs text-dark-500 px-1 text-right">Amount</div>
                     <div></div>
                 </div>
@@ -1339,7 +1416,7 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Discount (৳)</label>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Discount ($)</label>
                     <input type="number" id="invoiceDiscount" class="input-field" min="0" value="0" oninput="updateInvTotals()">
                 </div>
                 <div>
@@ -1348,7 +1425,7 @@
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-medium text-dark-400 mb-1.5">Advance / Paid Now (৳)</label>
+                <label class="block text-xs font-medium text-dark-400 mb-1.5">Advance / Paid Now ($)</label>
                 <input type="number" id="invoicePaidNow" class="input-field" min="0" value="0">
             </div>
             <div>
@@ -1357,11 +1434,11 @@
             </div>
 
             <div class="glass-card p-4" style="background:rgba(79,157,255,0.04);">
-                <div class="flex justify-between text-sm mb-1"><span class="text-dark-400">Subtotal</span><span id="invCalcSubtotal">৳0</span></div>
-                <div class="flex justify-between text-sm mb-1"><span class="text-dark-400">Discount</span><span id="invCalcDiscount">−৳0</span></div>
-                <div class="flex justify-between text-sm mb-1"><span class="text-dark-400">VAT</span><span id="invCalcVat">৳0</span></div>
-                <div class="flex justify-between text-base font-bold mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.08);"><span>Total</span><span id="invCalcTotal" style="color:#4F9DFF;">৳0</span></div>
-                <div class="flex justify-between text-sm mt-2"><span class="text-dark-400">Due after advance</span><span id="invCalcDue" style="color:#ef4444;">৳0</span></div>
+                <div class="flex justify-between text-sm mb-1"><span class="text-dark-400">Subtotal</span><span id="invCalcSubtotal">$0</span></div>
+                <div class="flex justify-between text-sm mb-1"><span class="text-dark-400">Discount</span><span id="invCalcDiscount">−$0</span></div>
+                <div class="flex justify-between text-sm mb-1"><span class="text-dark-400">VAT</span><span id="invCalcVat">$0</span></div>
+                <div class="flex justify-between text-base font-bold mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.08);"><span>Total</span><span id="invCalcTotal" style="color:#4F9DFF;">$0</span></div>
+                <div class="flex justify-between text-sm mt-2"><span class="text-dark-400">Due after advance</span><span id="invCalcDue" style="color:#ef4444;">$0</span></div>
             </div>
 
             <div class="flex gap-3 pt-2">
@@ -1399,7 +1476,7 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount (৳) *</label>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount ($) *</label>
                     <input type="number" id="paymentAmount" class="input-field" min="1" required placeholder="0">
                 </div>
                 <div>
@@ -1547,7 +1624,7 @@
         <div class="p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount (৳) *</label>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount ($) *</label>
                     <input type="number" id="txnAmount" class="input-field" min="1" placeholder="e.g. 50000">
                 </div>
                 <div>
@@ -1598,11 +1675,11 @@
             </div>
             <div class="glass-card p-4 flex items-center justify-between" style="background:rgba(79,157,255,0.05);">
                 <span class="text-xs text-dark-400">Available received money</span>
-                <span class="text-sm font-bold" id="transferAvail" style="color:#22c55e;">৳0</span>
+                <span class="text-sm font-bold" id="transferAvail" style="color:#22c55e;">$0</span>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount (৳) *</label>
+                    <label class="block text-xs font-medium text-dark-400 mb-1.5">Amount ($) *</label>
                     <input type="number" id="transferAmount" class="input-field" min="1" step="any">
                 </div>
                 <div>
@@ -1700,7 +1777,7 @@
                 <div>
                     <label class="block text-xs font-medium text-dark-400 mb-1.5">Client's Firebase Project ID *</label>
                     <input type="text" id="srvProjectId" class="input-field" placeholder="e.g. mrtdcoldstorage">
-                    <p class="text-xs text-dark-500 mt-1">ক্লায়েন্টের নিজের আলাদা Firebase project — এখানেই command ও status যাবে।</p>
+                    <p class="text-xs text-dark-500 mt-1">Client's separate Firebase project — commands and status will go here.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-dark-400 mb-1.5">Client's Firebase Web API Key *</label>
@@ -1714,7 +1791,7 @@
                     </div>
                 </div>
             </div>
-            <p class="text-xs text-dark-500 mt-4 leading-relaxed">Save করার পর একটা <b style="color:#a3a3a3;">Setup Code</b> তৈরি হবে — সেটা ক্লায়েন্টকে দিন, ক্লায়েন্ট তার Adata Cloud Server-এর Settings-এ বসিয়ে দিলেই সংযোগ হয়ে যাবে।</p>
+            <p class="text-xs text-dark-500 mt-4 leading-relaxed">After saving, a Setup Code will be generated — give it to the client. Once they paste it in their Adata Cloud Server Settings, the connection will be established.</p>
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="closeModal('addServerModal')" class="btn-ghost">Cancel</button>
                 <button onclick="saveServer()" class="btn-primary" id="saveServerBtn">
@@ -1727,11 +1804,11 @@
         <!-- Step 2: Setup code -->
         <div id="serverCodeStep" class="hidden">
             <div class="p-4 rounded-xl mb-4" style="background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2);">
-                <p class="text-sm" style="color:#22c55e;">✓ Server saved! নিচের Setup Code টা কপি করে ক্লায়েন্টকে দিন।</p>
+                <p class="text-sm" style="color:#22c55e;">✓ Server saved! Copy the Setup Code below and give it to the client.</p>
             </div>
             <label class="block text-xs font-medium text-dark-400 mb-1.5">Setup Code</label>
             <textarea id="setupCodeBox" class="input-field" rows="6" readonly style="font-family:monospace;font-size:0.7rem;word-break:break-all;"></textarea>
-            <p class="text-xs text-dark-500 mt-2">ক্লায়েন্ট তার Adata Cloud Server-এর Settings → Firebase Setup ঘরে এই কোডটা বসাবে।</p>
+            <p class="text-xs text-dark-500 mt-2">The client will paste this code in their Adata Cloud Server Settings → Firebase Setup.</p>
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="copySetupCode()" class="btn-primary">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -1768,7 +1845,7 @@
         </div>
 
         <div class="mt-4 px-3 py-2.5 rounded-lg text-xs leading-relaxed" style="background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.22); color:#eab308;">
-            ⚠ এটা ক্লায়েন্টের Adata Cloud Server manager login। Change হওয়ার সাথে সাথে পুরনো session গুলোও বন্ধ হয়ে যাবে। ভুল করলে client lock-out হতে পারে!
+            ⚠️ This is the client's Adata Cloud Server manager login. Changing it will immediately terminate all active sessions. Incorrect changes may lock the client out!
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
@@ -2972,7 +3049,7 @@ function addInvoiceItemRow(item) {
         '<input type="text" class="input-field inv-desc" placeholder="e.g. POS Software — 1 Year License" value="' + esc(item.desc || '') + '">' +
         '<input type="number" min="0" step="any" class="input-field inv-qty" style="text-align:right;padding:10px 6px;" value="' + (item.qty != null ? item.qty : 1) + '" oninput="invRowCalc(this)">' +
         '<input type="number" min="0" step="any" class="input-field inv-rate" style="text-align:right;padding:10px 6px;" placeholder="0" value="' + (item.rate != null ? item.rate : '') + '" oninput="invRowCalc(this)">' +
-        '<div class="text-right text-sm font-medium inv-amt" style="padding:10px 4px;">৳0</div>' +
+        '<div class="text-right text-sm font-medium inv-amt" style="padding:10px 4px;">$0</div>' +
         '<button type="button" class="btn-danger" style="padding:6px 0;width:36px;text-align:center;" onclick="removeInvRow(this)">×</button>';
     document.getElementById('invItemsContainer').appendChild(row);
     updateInvTotals();
@@ -4026,7 +4103,7 @@ function askArthFor(type) {
     var suggestions = {
         project: ['Restaurant management system', 'E-commerce platform', 'School management ERP', 'Hospital management system', 'Inventory tracking app'],
         service: ['ERP Software', 'Cloud Hosting', 'POS System', 'AI Chatbot', 'Mobile App Development'],
-        package: ['Starter plan ৳5,000/mo', 'Business plan ৳15,000/mo', 'Enterprise plan ৳30,000/mo', 'Custom SaaS pricing', 'One-time license package'],
+        package: ['Starter plan $5,000/mo', 'Business plan $15,000/mo', 'Enterprise plan $30,000/mo', 'Custom SaaS pricing', 'One-time license package'],
         testimonial: ['Happy CEO review', 'Small business owner praise', 'IT manager recommendation', 'Startup founder feedback', 'Operations head testimonial']
     };
     document.getElementById('arthAskHint').textContent = hints[type] || hints.project;
@@ -4600,7 +4677,21 @@ function attachRemoteListener(s) {
             s.apps = Array.isArray(live.apps) ? live.apps : [];
             s.admin_username = live.admin_username || '';
             s.version = live.version || s.version;
+            s.server_url = live.server_url || s.server_url || '';
+            s.storage = live.storage || null;
             s.last_command = live.last_command || null;
+            // Detect fresh create_app / regenerate_app_key results and show credentials once
+            var ackAt = Number(s.last_command && s.last_command.at) || 0;
+            var action = s.last_command && s.last_command.action;
+            if (ackAt > (s._ackAt || 0)) {
+                var isFirst = !s._ackAt;
+                s._ackAt = ackAt;
+                if (!isFirst && (action === 'create_app' || action === 'regenerate_app_key') &&
+                    s.last_command.ok !== false && s.last_command.result &&
+                    (Date.now() - ackAt) < 600000) {
+                    showCredsModal(action, s.last_command.result, s);
+                }
+            }
         }
         renderServers();
         updateServerStats();
@@ -4719,7 +4810,7 @@ function renderServers() {
         if (!online && (!Array.isArray(s.apps) || !s.apps.length)) {
             appsHtml =
                 '<div class="mt-4 px-4 py-5 rounded-xl text-center text-xs text-dark-500" style="border:1px dashed rgba(255,255,255,0.1);">' +
-                    'No report yet — ক্লায়েন্টের Adata Cloud Server Settings-এ Setup Code বসানো হয়েছে কিনা দেখুন।' +
+                    'No report yet — check if the client has pasted the Setup Code in their Adata Cloud Server Settings.' +
                 '</div>';
         } else {
             var appRows = '';
@@ -4753,6 +4844,10 @@ function renderServers() {
         card.innerHTML = headHtml + cmdLine + appsHtml;
         listEl.appendChild(card);
     });
+
+    // keep the new sections in sync with live data
+    renderServerApps();
+    renderStorageStats();
 }
 
 // --- Commands (written into the client's own Firebase project) ---
@@ -4788,7 +4883,7 @@ function sendAppCommand(docId, appId, enable) {
 function sendBackupCommand(docId) {
     var s = serversCache.find(function(x) { return x._id === docId; });
     if (!s) { showToast('Server not found', true); renderServers(); return; }
-    var drive = prompt('Enter USB drive letter for backup (e.g. D):\n\nপ্রথমবার backup দিলে ওই drive-এ "AdataCloudBackups" folder-এ সেভ হবে এবং automatic daily backup-ও ওই drive-এই চালু হয়ে যাবে।');
+    var drive = prompt('Enter USB drive letter for backup (e.g. D):\n\nOn first backup, files will be saved to the "AdataCloudBackups" folder on that drive, and automatic daily backups will be enabled on the same drive.');
     if (!drive || !drive.match(/^[A-Za-z]$/)) { showToast('Valid drive letter required (e.g. D)', true); return; }
     pushCommand(s, {
         action: 'backup_usb',
@@ -4806,6 +4901,341 @@ function deleteServer(docId) {
     db.collection('adata_servers').doc(docId).delete()
         .then(function() { showToast('Server removed'); })
         .catch(function(err) { showToast('Error: ' + err.message, true); });
+}
+
+// --- Server Apps & Server Storage sections ---
+
+function fmtBytes(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+    if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+    return (n / 1073741824).toFixed(2) + ' GB';
+}
+
+function copyPlain(txt, label) {
+    txt = String(txt == null ? '' : txt);
+    if (!txt) { showToast('Nothing to copy', true); return; }
+    var done = function() { showToast((label || 'Copied') + ' copied!'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(done, function() { fallbackCopy(txt); done(); });
+    } else { fallbackCopy(txt); done(); }
+}
+
+function fallbackCopy(txt) {
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+}
+
+function populateServerSelects() {
+    ['saServerSelect', 'ssServerSelect'].forEach(function(id) {
+        var sel = document.getElementById(id);
+        if (!sel) return;
+        var prev = sel.value;
+        var html = '<option value="">— Select a server —</option>';
+        serversCache.slice().sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || '')); })
+            .forEach(function(s) {
+                html += '<option value="' + esc(s._id) + '">' + esc(s.name || s._id) +
+                    (isServerOnline(s) ? ' (online)' : '') + '</option>';
+            });
+        sel.innerHTML = html;
+        // keep previous choice, else auto-select first server
+        var keep = serversCache.some(function(s) { return s._id === prev; }) ? prev : '';
+        if (!keep && serversCache.length) keep = serversCache[0]._id;
+        sel.value = keep;
+    });
+}
+
+function getSelServer(selectId) {
+    var sel = document.getElementById(selectId);
+    if (!sel || !sel.value) return null;
+    return serversCache.find(function(s) { return s._id === sel.value; }) || null;
+}
+
+function renderServerApps() {
+    populateServerSelects();
+    var listEl = document.getElementById('saAppsList');
+    var emptyEl = document.getElementById('saAppsEmpty');
+    var infoEl = document.getElementById('saServerInfo');
+    if (!listEl || !infoEl) return;
+
+    var s = getSelServer('saServerSelect');
+    emptyEl.classList.toggle('hidden', !!s);
+    listEl.innerHTML = '';
+
+    if (!s) { infoEl.innerHTML = ''; return; }
+    var online = isServerOnline(s);
+
+    infoEl.innerHTML =
+        '<div class="flex items-center justify-between flex-wrap gap-3">' +
+            '<div class="flex items-center gap-2 text-sm">' +
+                '<span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:' + (online ? '#22c55e' : '#525252') + ';"></span>' +
+                '<span class="font-medium">' + esc(s.name || s._id) + '</span>' +
+                '<span class="text-xs text-dark-500">' + (online ? 'Online' : 'Offline · seen ' + timeAgoStr(s.last_seen)) + '</span>' +
+            '</div>' +
+            '<div class="flex items-center gap-2">' +
+                '<span class="text-xs text-dark-400">Server URL:</span>' +
+                '<code class="text-xs" style="font-family:monospace;color:#a3a3a3;">' + esc(s.server_url || 'not reported yet') + '</code>' +
+                (s.server_url ? '<button class="btn-ghost text-xs py-1 px-2" onclick="copyPlain(\'' + esc(String(s.server_url)).replace(/'/g, "\\'") + '\',\'Server URL\')">Copy</button>' : '') +
+            '</div>' +
+        '</div>';
+
+    if (!Array.isArray(s.apps) || !s.apps.length) {
+        listEl.innerHTML =
+            '<div class="glass-card p-5 text-center text-xs text-dark-500">No apps reported' +
+            (online ? ' — server bridge update needed for create/delete.' : ' (server offline).') + '</div>';
+        return;
+    }
+
+    s.apps.slice().sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || '')); }).forEach(function(a) {
+        var enabled = String(a.status).toLowerCase() !== 'disabled';
+        var hasKey = !!a.apiKey;
+        var keyCell = hasKey
+            ? '<input id="key_' + esc(String(a.appId)) + '" type="password" readonly value="' + esc(String(a.apiKey)) + '" class="text-xs px-2 py-1 rounded bg-black/30 border border-white/10" style="font-family:monospace;width:230px;color:#a3a3a3;">' +
+              '<button class="btn-ghost text-xs py-1 px-2" onclick="toggleKeyVisibility(\'' + esc(String(a.appId)) + '\', this)">Show</button>'
+            : '<span class="text-xs text-dark-500">(hidden — Regenerate to view)</span>';
+
+        var div = document.createElement('div');
+        div.className = 'glass-card p-4';
+        div.innerHTML =
+            '<div class="flex items-start justify-between flex-wrap gap-3">' +
+                '<div class="min-w-0 flex-1">' +
+                    '<div class="flex items-center gap-2 flex-wrap">' +
+                        '<span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:' + (enabled ? '#22c55e' : '#ef4444') + ';"></span>' +
+                        '<span class="font-semibold text-sm">' + esc(a.name || a.appId || 'App') + '</span>' +
+                        '<span class="text-xs px-1.5 py-0.5 rounded" style="background:' + (enabled ? 'rgba(34,197,94,0.12);color:#22c55e' : 'rgba(239,68,68,0.12);color:#ef4444') + ';">' + (enabled ? 'active' : 'disabled') + '</span>' +
+                    '</div>' +
+                    '<div class="mt-2 flex items-center gap-2 flex-wrap">' +
+                        '<span class="text-xs text-dark-400">App ID:</span>' +
+                        '<code class="text-xs" style="font-family:monospace;color:#a3a3a3;">' + esc(a.appId || '-') + '</code>' +
+                        '<button class="btn-ghost text-xs py-1 px-2" onclick="copyPlain(\'' + esc(String(a.appId || '')).replace(/'/g, "\\'") + '\',\'App ID\')">Copy</button>' +
+                    '</div>' +
+                    '<div class="mt-2 flex items-center gap-2 flex-wrap">' +
+                        '<span class="text-xs text-dark-400">API Key:</span>' + keyCell +
+                        (hasKey ? '<button class="btn-ghost text-xs py-1 px-2" onclick="copyPlain(document.getElementById(\'key_' + esc(String(a.appId)) + '\').value,\'API Key\')">Copy</button>' : '') +
+                        '<button class="btn-ghost text-xs py-1 px-2" style="border-color:rgba(79,157,255,0.3);color:#4F9DFF;" onclick="regenRemoteKey(\'' + s._id + '\', \'' + esc(String(a.appId || '')) + '\')">Regenerate</button>' +
+                    '</div>' +
+                '</div>' +
+                '<button class="btn-danger text-xs py-1.5" onclick="deleteRemoteApp(\'' + s._id + '\', \'' + esc(String(a.appId || '')) + '\', \'' + esc(String(a.name || '')).replace(/'/g, "\\'") + '\')">Delete</button>' +
+            '</div>';
+        listEl.appendChild(div);
+    });
+}
+
+function toggleKeyVisibility(appId, btn) {
+    var inp = document.getElementById('key_' + appId);
+    if (!inp) return;
+    var showing = inp.type === 'text';
+    inp.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? 'Show' : 'Hide';
+}
+
+function renderStorageStats() {
+    populateServerSelects();
+    var elT = document.getElementById('ssTotal');
+    var elD = document.getElementById('ssDb');
+    var elU = document.getElementById('ssUploads');
+    var elUp = document.getElementById('ssUpdated');
+    if (!elT || !elD || !elU) return;
+
+    var s = getSelServer('ssServerSelect');
+    if (!s) {
+        elT.textContent = elD.textContent = elU.textContent = '—';
+        if (elUp) elUp.textContent = serversCache.length ? 'Select a server to see its storage usage.' : 'No servers connected yet.';
+        return;
+    }
+    var st = s.storage;
+    if (!st || (st.total_bytes == null && st.db_bytes == null)) {
+        elT.textContent = elD.textContent = elU.textContent = '—';
+        if (elUp) elUp.textContent =
+            'No storage report from "' + (s.name || 'server') + '" yet.' +
+            (isServerOnline(s) ? ' Live numbers will appear once the client server bridge updates.' : ' Server offline.');
+        return;
+    }
+    elD.textContent = fmtBytes(st.db_bytes);
+    elU.textContent = fmtBytes(st.uploads_bytes);
+    elT.textContent = fmtBytes(st.total_bytes != null ? st.total_bytes : (Number(st.db_bytes || 0) + Number(st.uploads_bytes || 0)));
+    if (elUp) elUp.textContent = 'Updated ' + (st.updated_at ? timeAgoStr(Number(st.updated_at)) : '—') +
+        ' · auto-refreshes every 10s while server is online.';
+}
+
+function generateStorageReport() {
+    var s = getSelServer('ssServerSelect');
+    if (!s) { showToast('Select a server first', true); return; }
+
+    var fromEl = document.getElementById('ssFromDate');
+    var toEl = document.getElementById('ssToDate');
+    var fromVal = fromEl ? fromEl.value.trim() : '';
+    var toVal = toEl ? toEl.value.trim() : '';
+
+    var st = s.storage || {};
+    var dbBytes = Number(st.db_bytes) || 0;
+    var uploadBytes = Number(st.uploads_bytes) || 0;
+    var totalBytes = Number(st.total_bytes) || (dbBytes + uploadBytes);
+    var updatedAt = st.updated_at ? new Date(Number(st.updated_at)) : null;
+
+    var reportTitle = 'Storage Report';
+    var dateRangeText = '';
+    if (fromVal || toVal) {
+        dateRangeText = (fromVal || '...') + ' to ' + (toVal || '...');
+        reportTitle = 'Storage Report: ' + dateRangeText;
+    }
+
+    var isHistorical = fromVal || toVal;
+    var noteHtml = isHistorical
+        ? '<div class="mt-3 p-3 rounded-lg text-xs" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#eab308;">' +
+          '<strong>Note:</strong> Historical storage tracking is not yet implemented on the server. ' +
+          'This report shows the <strong>current</strong> storage snapshot. ' +
+          'For true date-range reports, the server needs a daily snapshot tracker (future enhancement).' +
+          '</div>'
+        : '';
+
+    var html =
+        '<div class="flex items-center justify-between flex-wrap gap-3 mb-4">' +
+            '<div>' +
+                '<div class="text-sm font-semibold">' + esc(reportTitle) + '</div>' +
+                '<div class="text-xs text-dark-400 mt-0.5">Server: ' + esc(s.name || s._id) + (s.clientName ? ' (' + esc(s.clientName) + ')' : '') + '</div>' +
+            '</div>' +
+            (dateRangeText ? '<span class="tag-pill">' + esc(dateRangeText) + '</span>' : '') +
+        '</div>' +
+        '<div class="grid grid-cols-3 gap-3 mb-4">' +
+            '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">' +
+                '<div class="text-xs text-dark-400">Total Data</div>' +
+                '<div class="text-sm font-bold mt-1" style="color:#4F9DFF;">' + fmtBytes(totalBytes) + '</div>' +
+            '</div>' +
+            '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">' +
+                '<div class="text-xs text-dark-400">Database</div>' +
+                '<div class="text-sm font-bold mt-1">' + fmtBytes(dbBytes) + '</div>' +
+            '</div>' +
+            '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">' +
+                '<div class="text-xs text-dark-400">Uploads / Files</div>' +
+                '<div class="text-sm font-bold mt-1" style="color:#22c55e;">' + fmtBytes(uploadBytes) + '</div>' +
+            '</div>' +
+        '</div>' + noteHtml +
+        '<div class="flex gap-3 mt-4 flex-wrap">' +
+            '<button class="btn-ghost text-xs py-2" onclick="downloadStorageReportCsv(s, fromVal, toVal, dbBytes, uploadBytes, totalBytes, updatedAt)">Download CSV</button>' +
+        '</div>' +
+        '<div class="text-xs text-dark-500 mt-2">Report generated: ' + new Date().toLocaleString() + (updatedAt ? ' · Server last reported: ' + updatedAt.toLocaleString() : '') + '</div>';
+
+    var reportArea = document.getElementById('ssReportArea');
+    var reportContent = document.getElementById('ssReportContent');
+    if (!reportArea || !reportContent) return;
+
+    reportContent.innerHTML = html;
+    reportArea.classList.remove('hidden');
+}
+
+function downloadStorageReportCsv(s, fromVal, toVal, dbBytes, uploadBytes, totalBytes, updatedAt) {
+    var lines = [];
+    lines.push('Field,Value');
+    lines.push('Server Name,' + escCsv(s.name || s._id));
+    if (s.clientName) lines.push('Client Name,' + escCsv(s.clientName));
+    lines.push('Server ID,' + escCsv(s._id));
+    if (fromVal || toVal) lines.push('Date Range,' + escCsv((fromVal || '...') + ' to ' + (toVal || '...')));
+    lines.push('Report Generated,' + new Date().toISOString());
+    lines.push('Server Last Reported,' + (updatedAt ? updatedAt.toISOString() : 'N/A'));
+    lines.push('Total Data (bytes),' + totalBytes);
+    lines.push('Total Data (formatted),' + escCsv(fmtBytes(totalBytes)));
+    lines.push('Database (bytes),' + dbBytes);
+    lines.push('Database (formatted),' + escCsv(fmtBytes(dbBytes)));
+    lines.push('Uploads (bytes),' + uploadBytes);
+    lines.push('Uploads (formatted),' + escCsv(fmtBytes(uploadBytes)));
+    var csv = lines.join('\n');
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'storage-report-' + (s.name || 'server') + '-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('CSV downloaded');
+}
+
+function escCsv(v) {
+    var s = String(v == null ? '' : v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+}
+
+function resetStorageReport() {
+    var reportArea = document.getElementById('ssReportArea');
+    if (reportArea) reportArea.classList.add('hidden');
+    var fromEl = document.getElementById('ssFromDate');
+    var toEl = document.getElementById('ssToDate');
+    if (fromEl) fromEl.value = '';
+    if (toEl) toEl.value = '';
+    renderStorageStats();
+}
+
+// --- Remote app management commands ---
+
+function newRemoteApp() {
+    var s = getSelServer('saServerSelect') || serversCache[0];
+    if (!s) { showToast('No server connected yet', true); return; }
+    var name = prompt('New application name (on "' + (s.name || 'server")') + '):\n\ne.g. POS, CRM, Inventory');
+    if (!name || !String(name).trim()) return;
+    pushCommand(s, { action: 'create_app', name: String(name).trim(), appId: '', username: '', password: '' },
+        'Create command sent to "' + (s.name || 'server') + '"');
+}
+
+function deleteRemoteApp(docId, appId, name) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s || !appId) return;
+    if (!window.confirm('Delete application "' + (name || appId) + '"?\n\nAll data (records/files/logs) will be permanently deleted — this cannot be undone!')) return;
+    pushCommand(s, { action: 'delete_app', appId: appId, username: '', password: '' },
+        'Delete command sent to "' + (s.name || 'server') + '"');
+}
+
+function regenRemoteKey(docId, appId) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s || !appId) return;
+    if (!window.confirm('Regenerate API key for "' + appId + '"?\n\nThe old key will no longer work — you must update apps with the new key.')) return;
+    pushCommand(s, { action: 'regenerate_app_key', appId: appId, username: '', password: '' },
+        'Regenerate command sent to "' + (s.name || 'server') + '"');
+}
+
+// --- Credentials result modal ---
+
+var credsModalInjected = false;
+var currentCredsServer = '';
+
+function showCredsModal(action, result, s) {
+    if (!result || !result.appId) return;
+    currentCredsServer = s && s._id ? String(s._id) : '';
+    if (!credsModalInjected) {
+        credsModalInjected = true;
+        document.body.insertAdjacentHTML('beforeend',
+                '<div id="credsResultModal" class="modal-overlay">' +
+                    '<div class="modal-content" style="max-width:480px;width:92%;padding:24px;">' +
+                    '<h3 class="text-lg font-bold mb-1">Application Ready</h3>' +
+                    '<p class="text-xs text-dark-400 mb-4">Copy the credentials below and use them in the client app</p>' +
+                    '<label class="text-xs text-dark-400">App ID</label>' +
+                    '<div class="flex gap-2 mb-3"><input id="credAppId" class="input-field text-xs" style="font-family:monospace;" readonly><button class="btn-ghost text-xs px-3" onclick="copyPlain(document.getElementById(\'credAppId\').value,\'App ID\')">Copy</button></div>' +
+                    '<label class="text-xs text-dark-400">API Key</label>' +
+                    '<div class="flex gap-2 mb-3"><input id="credApiKey" class="input-field text-xs" style="font-family:monospace;" readonly><button class="btn-ghost text-xs px-3" onclick="copyPlain(document.getElementById(\'credApiKey\').value,\'API Key\')">Copy</button></div>' +
+                    '<label class="text-xs text-dark-400">Server URL</label>' +
+                    '<div class="flex gap-2 mb-4"><input id="credServerUrl" class="input-field text-xs" style="font-family:monospace;" readonly><button class="btn-ghost text-xs px-3" onclick="copyPlain(document.getElementById(\'credServerUrl\').value,\'Server URL\')">Copy</button></div>' +
+                    '<div class="flex justify-end gap-2">' +
+                        '<button class="btn-primary" onclick="closeModal(\'credsResultModal\')">Done</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>');
+    }
+    document.getElementById('credAppId').value = result.appId || '';
+    document.getElementById('credApiKey').value = result.apiKey || '';
+    document.getElementById('credServerUrl').value =
+        (s && s.server_url) || (result.serverUrl) || '';
+    openModal('credsResultModal');
 }
 
 // --- Add server / setup code ---
@@ -4859,7 +5289,7 @@ function saveServer() {
     var secret = document.getElementById('srvSecret').value.trim();
 
     if (!name || !clientName || !projectId || !apiKey) {
-        showToast('সব * চিহ্নিত ঘর পূরণ করুন', true);
+        showToast('Fill all required fields', true);
         return;
     }
 
@@ -4940,7 +5370,7 @@ function sendCredsCommand() {
     if (username && username.length < 3) { showToast('Username must be at least 3 characters', true); return; }
     if (password && password.length < 6) { showToast('Password must be at least 6 characters', true); return; }
     if (password && password !== password2) { showToast('Passwords do not match', true); return; }
-    if (!username && !password) { showToast('কিছু একটা দিন — username অথবা password', true); return; }
+    if (!username && !password) { showToast('Enter at least one field — username or password', true); return; }
 
     pushCommand(s, {
         action: 'set_admin_credentials',
@@ -4952,7 +5382,7 @@ function sendCredsCommand() {
     closeModal('credsModal');
 }
 
-
+// ============================================================
 // ============================================================
 // === SIDEBAR: COLLAPSE PIN + MENU REORDER ===
 // ============================================================
