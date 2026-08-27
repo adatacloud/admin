@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -378,6 +379,10 @@
                 <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
                 Server Storage
             </div>
+            <div class="nav-item" onclick="showSection('serverBackups', this)">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Server Backups
+            </div>
             <div class="nav-item" onclick="showSection('invoices', this)">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 Invoices
@@ -691,43 +696,111 @@
             <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
                 <div>
                     <h1 class="text-2xl font-bold">Server Storage</h1>
-                    <p class="text-sm text-dark-400 mt-1">Storage usage on each Adata Cloud Server</p>
+                    <p class="text-sm text-dark-400 mt-1">Real-time storage usage &amp; cloud backup status</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="printStorageReport()" class="btn-primary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Print Report
+                    </button>
+                    <button onclick="downloadStoragePdf()" class="btn-ghost">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download PDF
+                    </button>
                 </div>
             </div>
             <div class="glass-card p-5 mb-6">
                 <label class="text-xs text-dark-400 uppercase tracking-wider font-semibold">Select Server</label>
                 <select id="ssServerSelect" class="input-field mt-2" onchange="renderStorageStats()"></select>
-                <div class="mt-4 grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-dark-400 mb-1">From date</label>
-                        <input type="date" id="ssFromDate" class="input-field">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-dark-400 mb-1">To date</label>
-                        <input type="date" id="ssToDate" class="input-field">
-                    </div>
-                </div>
-                <div class="mt-4 flex gap-3">
-                    <button onclick="generateStorageReport()" class="btn-primary">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                        Report
-                    </button>
-                    <button onclick="resetStorageReport()" class="btn-ghost">Reset</button>
-                </div>
+                <div id="ssServerInfo" class="mt-3"></div>
             </div>
             <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#4F9DFF;" id="ssTotal">&mdash;</div><div class="text-xs text-dark-400 mt-1">Total Data</div></div>
-                <div class="stat-card"><div class="text-lg font-bold text-white" id="ssDb">&mdash;</div><div class="text-xs text-dark-400 mt-1">Database</div></div>
-                <div class="stat-card"><div class="text-lg font-bold" style="color:#22c55e;" id="ssUploads">&mdash;</div><div class="text-xs text-dark-400 mt-1">Uploads / Files</div></div>
+                <div class="stat-card">
+                    <div class="text-lg font-bold" style="color:#4F9DFF;" id="ssTotal">&mdash;</div>
+                    <div class="text-xs text-dark-400 mt-1">Total Data</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-lg font-bold text-white" id="ssDb">&mdash;</div>
+                    <div class="text-xs text-dark-400 mt-1">Database</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-lg font-bold" style="color:#22c55e;" id="ssUploads">&mdash;</div>
+                    <div class="text-xs text-dark-400 mt-1">Uploads / Files</div>
+                </div>
+            </div>
+            <div class="glass-card p-5 mb-6">
+                <div class="text-xs text-dark-400 uppercase tracking-wider font-semibold mb-3">Cloud Backup Summary</div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <div class="text-sm font-bold" style="color:#4F9DFF;" id="ssBackupCount">&mdash;</div>
+                        <div class="text-xs text-dark-500 mt-0.5">Total Backups</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-white" id="ssBackupSize">&mdash;</div>
+                        <div class="text-xs text-dark-500 mt-0.5">Backup Storage Used</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold" style="color:#22c55e;" id="ssLastBackup">&mdash;</div>
+                        <div class="text-xs text-dark-500 mt-0.5">Last Backup</div>
+                    </div>
+                </div>
             </div>
             <div class="glass-card p-4">
-                <p class="text-xs text-dark-500" id="ssUpdated">Waiting for server report&hellip; (server bridge update required for live numbers)</p>
+                <p class="text-xs text-dark-500" id="ssUpdated">Waiting for server report&hellip;</p>
             </div>
-            <div id="ssReportArea" class="mt-6 hidden">
-                <div class="glass-card p-6">
-                    <h3 class="text-sm font-semibold mb-4">Storage Report</h3>
-                    <div id="ssReportContent"></div>
+        </div>
+
+        <!-- ===== SERVER BACKUPS ===== -->
+        <div id="section-serverBackups" class="section">
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold">Server Backups</h1>
+                    <p class="text-sm text-dark-400 mt-1">Cloud backup &amp; disaster recovery — data stored in Firebase Firestore</p>
                 </div>
+            </div>
+            <div class="glass-card p-5 mb-6">
+                <label class="text-xs text-dark-400 uppercase tracking-wider font-semibold">Select Server</label>
+                <select id="sbServerSelect" class="input-field mt-2" onchange="renderBackupStats()"></select>
+                <div id="sbServerInfo" class="mt-3"></div>
+                <div class="mt-4 flex gap-3 flex-wrap">
+                    <button onclick="triggerBackupNow()" class="btn-primary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+                        Backup Now
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs text-dark-400">Auto Backup</label>
+                        <label class="ios-switch-wrap">
+                            <input type="checkbox" class="ios-switch" id="sbAutoBackup" onchange="toggleAutoBackup()">
+                            <span class="ios-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-5 mb-6">
+                <div class="text-xs text-dark-400 uppercase tracking-wider font-semibold mb-3">Firestore Storage Usage</div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <div class="text-xl font-bold" style="color:#4F9DFF;" id="sbTotalSize">&mdash;</div>
+                        <div class="text-xs text-dark-500 mt-0.5">Total Backup Size</div>
+                    </div>
+                    <div>
+                        <div class="text-xl font-bold text-white" id="sbTotalBackups">&mdash;</div>
+                        <div class="text-xs text-dark-500 mt-0.5">Total Backups</div>
+                    </div>
+                    <div>
+                        <div class="text-xl font-bold" style="color:#22c55e;" id="sbLastBackupTime">&mdash;</div>
+                        <div class="text-xs text-dark-500 mt-0.5">Last Backup</div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-4 mb-6">
+                <div id="sbLoading" class="text-xs text-dark-500">Select a server to view backups&hellip;</div>
+                <div id="sbError" class="text-xs text-red-400 hidden"></div>
+            </div>
+            <div id="sbBackupList" class="space-y-3"></div>
+            <div id="sbEmpty" class="empty-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <p class="text-sm">No backups yet. Click "Backup Now" to create your first backup.</p>
             </div>
         </div>
 
@@ -1931,6 +2004,17 @@ function showSection(name, el) {
     else if (event && event.currentTarget) event.currentTarget.classList.add('active');
     document.getElementById('sidebar').classList.remove('open');
     if (name === 'settings') setTimeout(updateDesignPreview, 30);
+    if (name === 'serverBackups') {
+        // Ensure select is populated first, then render stats
+        populateServerSelects();
+        setTimeout(function() {
+            renderBackupStats();
+        }, 100);
+    }
+    if (name === 'serverStorage') {
+        populateServerSelects();
+        setTimeout(renderStorageStats, 100);
+    }
 }
 
 // === TOAST ===
@@ -4669,9 +4753,11 @@ function attachRemoteListener(s) {
     var rdb = app.firestore();
     var entry = { app: app, db: rdb, unsub: null };
     serverRemote[s._id] = entry;
+    console.log('[backup-debug] Attaching listener to', remoteDocPath(s), 'in project', s.projectId);
     entry.unsub = rdb.collection('adata_servers').doc(remoteDocPath(s)).onSnapshot(function(doc) {
         var live = doc.exists ? doc.data() : null;
         s.live = live;
+        console.log('[backup-debug] Snapshot received for', s._id, 'backups=', live && live.backups, 'auto_backup=', live && live.auto_backup);
         if (live) {
             s.last_seen = live.last_seen || null;
             s.apps = Array.isArray(live.apps) ? live.apps : [];
@@ -4680,7 +4766,8 @@ function attachRemoteListener(s) {
             s.server_url = live.server_url || s.server_url || '';
             s.storage = live.storage || null;
             s.last_command = live.last_command || null;
-            // Detect fresh create_app / regenerate_app_key results and show credentials once
+            s.backups = Array.isArray(live.backups) ? live.backups : (s.backups || []);
+            s.auto_backup = live.auto_backup || false;
             var ackAt = Number(s.last_command && s.last_command.at) || 0;
             var action = s.last_command && s.last_command.action;
             if (ackAt > (s._ackAt || 0)) {
@@ -4848,6 +4935,7 @@ function renderServers() {
     // keep the new sections in sync with live data
     renderServerApps();
     renderStorageStats();
+    renderBackupStats();
 }
 
 // --- Commands (written into the client's own Firebase project) ---
@@ -4934,7 +5022,7 @@ function fallbackCopy(txt) {
 }
 
 function populateServerSelects() {
-    ['saServerSelect', 'ssServerSelect'].forEach(function(id) {
+    ['saServerSelect', 'ssServerSelect', 'sbServerSelect'].forEach(function(id) {
         var sel = document.getElementById(id);
         if (!sel) return;
         var prev = sel.value;
@@ -4949,6 +5037,13 @@ function populateServerSelects() {
         var keep = serversCache.some(function(s) { return s._id === prev; }) ? prev : '';
         if (!keep && serversCache.length) keep = serversCache[0]._id;
         sel.value = keep;
+        // Manually trigger onchange since setting value via JS doesn't fire it
+        if (id === 'sbServerSelect' && currentSection === 'serverBackups') {
+            setTimeout(renderBackupStats, 10);
+        }
+        if (id === 'ssServerSelect' && currentSection === 'serverStorage') {
+            setTimeout(renderStorageStats, 10);
+        }
     });
 }
 
@@ -5042,139 +5137,352 @@ function renderStorageStats() {
     var elD = document.getElementById('ssDb');
     var elU = document.getElementById('ssUploads');
     var elUp = document.getElementById('ssUpdated');
-    if (!elT || !elD || !elU) return;
+    var infoEl = document.getElementById('ssServerInfo');
+    var elBkCount = document.getElementById('ssBackupCount');
+    var elBkSize = document.getElementById('ssBackupSize');
+    var elBkLast = document.getElementById('ssLastBackup');
 
     var s = getSelServer('ssServerSelect');
     if (!s) {
-        elT.textContent = elD.textContent = elU.textContent = '—';
+        if (elT) elT.innerHTML = '&mdash;';
+        if (elD) elD.innerHTML = '&mdash;';
+        if (elU) elU.innerHTML = '&mdash;';
         if (elUp) elUp.textContent = serversCache.length ? 'Select a server to see its storage usage.' : 'No servers connected yet.';
+        if (infoEl) infoEl.innerHTML = '';
+        if (elBkCount) elBkCount.innerHTML = '&mdash;';
+        if (elBkSize) elBkSize.innerHTML = '&mdash;';
+        if (elBkLast) elBkLast.innerHTML = '&mdash;';
         return;
     }
+
+    var online = isServerOnline(s);
+    if (infoEl) {
+        infoEl.innerHTML =
+            '<div class="flex items-center gap-2 text-sm">' +
+                '<span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:' + (online ? '#22c55e' : '#525252') + ';' + (online ? 'box-shadow:0 0 6px rgba(34,197,94,0.7);' : '') + '"></span>' +
+                '<span class="font-medium">' + esc(s.name || s._id) + '</span>' +
+                '<span class="text-xs text-dark-500">' + (online ? 'Online' : 'Offline · seen ' + timeAgoStr(s.last_seen)) + '</span>' +
+            '</div>';
+    }
+
     var st = s.storage;
     if (!st || (st.total_bytes == null && st.db_bytes == null)) {
-        elT.textContent = elD.textContent = elU.textContent = '—';
+        if (elT) elT.innerHTML = '&mdash;';
+        if (elD) elD.innerHTML = '&mdash;';
+        if (elU) elU.innerHTML = '&mdash;';
         if (elUp) elUp.textContent =
             'No storage report from "' + (s.name || 'server') + '" yet.' +
-            (isServerOnline(s) ? ' Live numbers will appear once the client server bridge updates.' : ' Server offline.');
-        return;
+            (online ? ' Live numbers will appear once the client server bridge updates.' : ' Server offline.');
+    } else {
+        if (elD) elD.textContent = fmtBytes(st.db_bytes);
+        if (elU) elU.textContent = fmtBytes(st.uploads_bytes);
+        if (elT) elT.textContent = fmtBytes(st.total_bytes != null ? st.total_bytes : (Number(st.db_bytes || 0) + Number(st.uploads_bytes || 0)));
+        if (elUp) elUp.textContent = 'Updated ' + (st.updated_at ? timeAgoStr(Number(st.updated_at)) : '—') +
+            ' · auto-refreshes every 10s while server is online.';
     }
-    elD.textContent = fmtBytes(st.db_bytes);
-    elU.textContent = fmtBytes(st.uploads_bytes);
-    elT.textContent = fmtBytes(st.total_bytes != null ? st.total_bytes : (Number(st.db_bytes || 0) + Number(st.uploads_bytes || 0)));
-    if (elUp) elUp.textContent = 'Updated ' + (st.updated_at ? timeAgoStr(Number(st.updated_at)) : '—') +
-        ' · auto-refreshes every 10s while server is online.';
+
+    var backups = s.backups || [];
+    if (elBkCount) elBkCount.textContent = backups.length;
+    if (backups.length > 0) {
+        var totalBkBytes = backups.reduce(function(sum, b) { return sum + (b.totalSize || b.total_size || 0); }, 0);
+        if (elBkSize) elBkSize.textContent = fmtBytes(totalBkBytes);
+        var sorted = backups.slice().sort(function(a, b) { return (b.createdAt || b.created_at || 0) - (a.createdAt || a.created_at || 0); });
+        var last = sorted[0];
+        var lastTime = last.createdAt || last.created_at;
+        if (elBkLast) elBkLast.textContent = lastTime ? timeAgoStr(Number(lastTime)) : '—';
+    } else {
+        if (elBkSize) elBkSize.textContent = '0 B';
+        if (elBkLast) elBkLast.textContent = '—';
+    }
 }
 
-function generateStorageReport() {
+function buildStorageReportHtml() {
     var s = getSelServer('ssServerSelect');
-    if (!s) { showToast('Select a server first', true); return; }
-
-    var fromEl = document.getElementById('ssFromDate');
-    var toEl = document.getElementById('ssToDate');
-    var fromVal = fromEl ? fromEl.value.trim() : '';
-    var toVal = toEl ? toEl.value.trim() : '';
-
+    if (!s) return null;
     var st = s.storage || {};
     var dbBytes = Number(st.db_bytes) || 0;
     var uploadBytes = Number(st.uploads_bytes) || 0;
     var totalBytes = Number(st.total_bytes) || (dbBytes + uploadBytes);
-    var updatedAt = st.updated_at ? new Date(Number(st.updated_at)) : null;
+    var backups = s.backups || [];
+    var totalBkBytes = backups.reduce(function(sum, b) { return sum + (b.totalSize || b.total_size || 0); }, 0);
+    var sorted = backups.slice().sort(function(a, b) { return (b.createdAt || b.created_at || 0) - (a.createdAt || a.created_at || 0); });
+    var lastBk = sorted[0];
+    var lastBkTime = lastBk ? (lastBk.createdAt || lastBk.created_at) : null;
+    var now = new Date();
+    var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var reportMonth = monthNames[now.getMonth()] + ' ' + now.getFullYear();
+    var serverName = esc(s.name || s._id);
+    var clientId = esc(s.clientName || s.client_id || '—');
 
-    var reportTitle = 'Storage Report';
-    var dateRangeText = '';
-    if (fromVal || toVal) {
-        dateRangeText = (fromVal || '...') + ' to ' + (toVal || '...');
-        reportTitle = 'Storage Report: ' + dateRangeText;
+    var rows = '';
+    backups.forEach(function(b, i) {
+        var d = b.createdAt || b.created_at ? new Date(Number(b.createdAt || b.created_at)) : null;
+        var dateStr = d ? d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) : '—';
+        var sizeStr = fmtBytes(b.totalSize || b.total_size || 0);
+        var statusStr = b.status === 'completed' ? '<span style="color:#22c55e;">Completed</span>' : b.status === 'failed' ? '<span style="color:#ef4444;">Failed</span>' : '<span style="color:#f59e0b;">Pending</span>';
+        rows += '<tr style="border-bottom:1px solid #e5e7eb;">' +
+            '<td style="padding:8px 12px;font-size:13px;color:#374151;">' + (i + 1) + '</td>' +
+            '<td style="padding:8px 12px;font-size:13px;color:#374151;font-family:monospace;">' + esc(b.backupId || '—') + '</td>' +
+            '<td style="padding:8px 12px;font-size:13px;color:#374151;">' + dateStr + '</td>' +
+            '<td style="padding:8px 12px;font-size:13px;color:#374151;text-align:right;">' + sizeStr + '</td>' +
+            '<td style="padding:8px 12px;font-size:13px;text-align:center;">' + statusStr + '</td>' +
+            '</tr>';
+    });
+    if (!rows) {
+        rows = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#9ca3af;font-size:13px;">No backups recorded this period</td></tr>';
     }
 
-    var isHistorical = fromVal || toVal;
-    var noteHtml = isHistorical
-        ? '<div class="mt-3 p-3 rounded-lg text-xs" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#eab308;">' +
-          '<strong>Note:</strong> Historical storage tracking is not yet implemented on the server. ' +
-          'This report shows the <strong>current</strong> storage snapshot. ' +
-          'For true date-range reports, the server needs a daily snapshot tracker (future enhancement).' +
-          '</div>'
-        : '';
+    var html = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+        '<title>Storage Report - ' + serverName + ' - ' + reportMonth + '</title>' +
+        '<style>' +
+        'body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:20px;color:#1f2937;background:#fff;}' +
+        '.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #2563eb;padding-bottom:16px;margin-bottom:24px;}' +
+        '.logo{font-size:22px;font-weight:700;color:#2563eb;}' +
+        '.meta{text-align:right;font-size:12px;color:#6b7280;}' +
+        '.section-title{font-size:15px;font-weight:700;color:#1f2937;margin:24px 0 12px 0;padding-bottom:6px;border-bottom:1px solid #e5e7eb;}' +
+        '.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;}' +
+        '.stat-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;text-align:center;}' +
+        '.stat-value{font-size:24px;font-weight:700;color:#1f2937;}' +
+        '.stat-label{font-size:12px;color:#6b7280;margin-top:4px;}' +
+        'table{width:100%;border-collapse:collapse;}' +
+        'th{background:#f3f4f6;padding:10px 12px;font-size:12px;font-weight:600;color:#374151;text-align:left;border-bottom:2px solid #d1d5db;}' +
+        'th:last-child,th:nth-child(4){text-align:right;}' +
+        'th:nth-child(1){text-align:center;width:40px;}' +
+        'th:nth-child(5){text-align:center;}' +
+        '.footer{margin-top:32px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center;}' +
+        '.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;}' +
+        '.badge-green{background:#dcfce7;color:#166534;}' +
+        '.badge-blue{background:#dbeafe;color:#1e40af;}' +
+        '@media print{body{padding:0;} .no-print{display:none!important;}}' +
+        '</style></head><body>' +
 
-    var html =
-        '<div class="flex items-center justify-between flex-wrap gap-3 mb-4">' +
+        '<div class="header">' +
             '<div>' +
-                '<div class="text-sm font-semibold">' + esc(reportTitle) + '</div>' +
-                '<div class="text-xs text-dark-400 mt-0.5">Server: ' + esc(s.name || s._id) + (s.clientName ? ' (' + esc(s.clientName) + ')' : '') + '</div>' +
+                '<div class="logo">Adata Cloud</div>' +
+                '<div style="font-size:13px;color:#6b7280;margin-top:4px;">Monthly Storage &amp; Backup Report</div>' +
             '</div>' +
-            (dateRangeText ? '<span class="tag-pill">' + esc(dateRangeText) + '</span>' : '') +
+            '<div class="meta">' +
+                '<div style="font-size:14px;font-weight:600;color:#1f2937;">' + reportMonth + '</div>' +
+                '<div>Generated: ' + now.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) + '</div>' +
+                '<div>Server: ' + serverName + '</div>' +
+                (clientId !== '—' ? '<div>Client: ' + clientId + '</div>' : '') +
+            '</div>' +
         '</div>' +
-        '<div class="grid grid-cols-3 gap-3 mb-4">' +
-            '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">' +
-                '<div class="text-xs text-dark-400">Total Data</div>' +
-                '<div class="text-sm font-bold mt-1" style="color:#4F9DFF;">' + fmtBytes(totalBytes) + '</div>' +
-            '</div>' +
-            '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">' +
-                '<div class="text-xs text-dark-400">Database</div>' +
-                '<div class="text-sm font-bold mt-1">' + fmtBytes(dbBytes) + '</div>' +
-            '</div>' +
-            '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">' +
-                '<div class="text-xs text-dark-400">Uploads / Files</div>' +
-                '<div class="text-sm font-bold mt-1" style="color:#22c55e;">' + fmtBytes(uploadBytes) + '</div>' +
-            '</div>' +
-        '</div>' + noteHtml +
-        '<div class="flex gap-3 mt-4 flex-wrap">' +
-            '<button class="btn-ghost text-xs py-2" onclick="downloadStorageReportCsv(s, fromVal, toVal, dbBytes, uploadBytes, totalBytes, updatedAt)">Download CSV</button>' +
+
+        '<div class="section-title">Storage Overview</div>' +
+        '<div class="stats-grid">' +
+            '<div class="stat-box"><div class="stat-value">' + fmtBytes(totalBytes) + '</div><div class="stat-label">Total Data</div></div>' +
+            '<div class="stat-box"><div class="stat-value">' + fmtBytes(dbBytes) + '</div><div class="stat-label">Database</div></div>' +
+            '<div class="stat-box"><div class="stat-value">' + fmtBytes(uploadBytes) + '</div><div class="stat-label">Uploads / Files</div></div>' +
         '</div>' +
-        '<div class="text-xs text-dark-500 mt-2">Report generated: ' + new Date().toLocaleString() + (updatedAt ? ' · Server last reported: ' + updatedAt.toLocaleString() : '') + '</div>';
 
-    var reportArea = document.getElementById('ssReportArea');
-    var reportContent = document.getElementById('ssReportContent');
-    if (!reportArea || !reportContent) return;
+        '<div class="section-title">Cloud Backup Summary <span class="badge badge-blue">' + backups.length + ' backup' + (backups.length !== 1 ? 's' : '') + '</span></div>' +
+        '<div class="stats-grid">' +
+            '<div class="stat-box"><div class="stat-value">' + fmtBytes(totalBkBytes) + '</div><div class="stat-label">Firestore Storage Used</div></div>' +
+            '<div class="stat-box"><div class="stat-value">' + backups.length + '</div><div class="stat-label">Total Backups</div></div>' +
+            '<div class="stat-box"><div class="stat-value">' + (lastBkTime ? new Date(Number(lastBkTime)).toLocaleDateString('en-GB', {day:'2-digit',month:'short'}) : '—') + '</div><div class="stat-label">Last Backup</div></div>' +
+        '</div>' +
 
-    reportContent.innerHTML = html;
-    reportArea.classList.remove('hidden');
+        '<div class="section-title">Backup History</div>' +
+        '<table>' +
+            '<thead><tr>' +
+                '<th>#</th>' +
+                '<th>Backup ID</th>' +
+                '<th>Date &amp; Time</th>' +
+                '<th>Size</th>' +
+                '<th>Status</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+
+        '<div class="footer">' +
+            'Adata Cloud Server &mdash; Monthly Report &mdash; ' + reportMonth + ' &mdash; Confidential' +
+        '</div>' +
+
+        '</body></html>';
+    return html;
 }
 
-function downloadStorageReportCsv(s, fromVal, toVal, dbBytes, uploadBytes, totalBytes, updatedAt) {
-    var lines = [];
-    lines.push('Field,Value');
-    lines.push('Server Name,' + escCsv(s.name || s._id));
-    if (s.clientName) lines.push('Client Name,' + escCsv(s.clientName));
-    lines.push('Server ID,' + escCsv(s._id));
-    if (fromVal || toVal) lines.push('Date Range,' + escCsv((fromVal || '...') + ' to ' + (toVal || '...')));
-    lines.push('Report Generated,' + new Date().toISOString());
-    lines.push('Server Last Reported,' + (updatedAt ? updatedAt.toISOString() : 'N/A'));
-    lines.push('Total Data (bytes),' + totalBytes);
-    lines.push('Total Data (formatted),' + escCsv(fmtBytes(totalBytes)));
-    lines.push('Database (bytes),' + dbBytes);
-    lines.push('Database (formatted),' + escCsv(fmtBytes(dbBytes)));
-    lines.push('Uploads (bytes),' + uploadBytes);
-    lines.push('Uploads (formatted),' + escCsv(fmtBytes(uploadBytes)));
-    var csv = lines.join('\n');
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+function printStorageReport() {
+    var s = getSelServer('ssServerSelect');
+    if (!s) { showToast('Select a server first', true); return; }
+    var html = buildStorageReportHtml();
+    if (!html) return;
+    var w = window.open('', '_blank', 'width=800,height=600');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(function() { w.print(); }, 500);
+    showToast('Report opened for printing');
+}
+
+function downloadStoragePdf() {
+    var s = getSelServer('ssServerSelect');
+    if (!s) { showToast('Select a server first', true); return; }
+    var html = buildStorageReportHtml();
+    if (!html) return;
+    var w = window.open('', '_blank', 'width=800,height=600');
+    w.document.write(html);
+    w.document.close();
+    var serverName = s.name || 'server';
+    var now = new Date();
+    var fileName = 'adata-storage-report-' + serverName + '-' + now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '.html';
+    var blob = new Blob([html], {type:'text/html'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'storage-report-' + (s.name || 'server') + '-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('CSV downloaded');
+    showToast('Report downloaded — open in browser then Print to PDF');
 }
 
-function escCsv(v) {
-    var s = String(v == null ? '' : v);
-    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-        return '"' + s.replace(/"/g, '""') + '"';
+// --- Server Backups section ---
+
+function renderBackupStats() {
+    var s = getSelServer('sbServerSelect');
+    var loadingEl = document.getElementById('sbLoading');
+    var errorEl = document.getElementById('sbError');
+    var listEl = document.getElementById('sbBackupList');
+    var emptyEl = document.getElementById('sbEmpty');
+    var elTotal = document.getElementById('sbTotalBackups');
+    var elLast = document.getElementById('sbLastBackupTime');
+    var elSize = document.getElementById('sbTotalSize');
+    var infoEl = document.getElementById('sbServerInfo');
+    if (!s) {
+        if (!renderBackupStats._retried) {
+            renderBackupStats._retried = true;
+            setTimeout(function() { renderBackupStats._retried = false; renderBackupStats(); }, 200);
+        }
+        if (loadingEl) loadingEl.textContent = 'Select a server to view backups…';
+        if (errorEl) errorEl.classList.add('hidden');
+        if (listEl) listEl.innerHTML = '';
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (elTotal) elTotal.innerHTML = '&mdash;';
+        if (elLast) elLast.innerHTML = '&mdash;';
+        if (elSize) elSize.innerHTML = '&mdash;';
+        if (infoEl) infoEl.innerHTML = '';
+        return;
     }
-    return s;
+    if (loadingEl) loadingEl.textContent = 'Loading backups…';
+    if (errorEl) errorEl.classList.add('hidden');
+
+    var online = isServerOnline(s);
+
+    if (infoEl) {
+        infoEl.innerHTML =
+            '<div class="flex items-center gap-2 text-sm">' +
+                '<span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:' + (online ? '#22c55e' : '#525252') + ';' + (online ? 'box-shadow:0 0 6px rgba(34,197,94,0.7);' : '') + '"></span>' +
+                '<span class="font-medium">' + esc(s.name || s._id) + '</span>' +
+                '<span class="text-xs text-dark-500">' + (online ? 'Online' : 'Offline · seen ' + timeAgoStr(s.last_seen)) + '</span>' +
+            '</div>';
+    }
+
+    var backups = s.backups || [];
+    console.log('[backup-debug] renderBackupStats backups count:', backups.length, 'first item:', backups.length ? backups[0] : 'none');
+    if (loadingEl) loadingEl.classList.add('hidden');
+    if (backups.length === 0) {
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        if (listEl) listEl.innerHTML = '';
+        if (elTotal) elTotal.textContent = '0';
+        if (elLast) elLast.textContent = '—';
+        if (elSize) elSize.textContent = '0 B';
+    } else {
+        if (emptyEl) emptyEl.classList.add('hidden');
+        renderBackupList(s, backups);
+        if (elTotal) elTotal.textContent = backups.length;
+        var sorted = backups.slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+        var last = sorted[0];
+        if (elLast) elLast.textContent = last.createdAt ? timeAgoStr(Number(last.createdAt)) : '—';
+        var totalBytes = backups.reduce(function(sum, b) { return sum + (b.totalSize || 0); }, 0);
+        if (elSize) elSize.textContent = fmtBytes(totalBytes);
+    }
+    var autoSw = document.getElementById('sbAutoBackup');
+    if (autoSw) autoSw.checked = s.auto_backup === true || s.auto_backup === 'on';
+    var backupBtn = document.querySelector('#section-serverBackups .btn-primary');
+    if (backupBtn) {
+        backupBtn.disabled = !online;
+        backupBtn.style.opacity = online ? '1' : '0.4';
+        backupBtn.style.cursor = online ? 'pointer' : 'not-allowed';
+    }
+    if (autoSw) {
+        autoSw.disabled = !online;
+        autoSw.style.opacity = online ? '1' : '0.4';
+    }
+    if (!online && errorEl) {
+        errorEl.textContent = 'Server is offline — backup/restore commands will not work until it comes back online.';
+        errorEl.classList.remove('hidden');
+    } else if (errorEl) {
+        errorEl.classList.add('hidden');
+    }
 }
 
-function resetStorageReport() {
-    var reportArea = document.getElementById('ssReportArea');
-    if (reportArea) reportArea.classList.add('hidden');
-    var fromEl = document.getElementById('ssFromDate');
-    var toEl = document.getElementById('ssToDate');
-    if (fromEl) fromEl.value = '';
-    if (toEl) toEl.value = '';
-    renderStorageStats();
+function renderBackupList(s, backups) {
+    var listEl = document.getElementById('sbBackupList');
+    if (!listEl) return;
+    var sorted = backups.slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    var html = '';
+    sorted.forEach(function(b) {
+        var d = b.createdAt ? new Date(Number(b.createdAt)) : null;
+        var dateStr = d ? d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+        var statusColor = b.status === 'completed' ? '#22c55e' : b.status === 'failed' ? '#ef4444' : '#f59e0b';
+        var statusText = b.status === 'completed' ? '✅ OK' : b.status === 'failed' ? '❌ Failed' : '⏳ Pending';
+        html += '<div class="glass-card p-4 flex items-center justify-between flex-wrap gap-3">' +
+            '<div class="flex items-center gap-4 min-w-0">' +
+                '<div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(79,157,255,0.1);">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F9DFF" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+                '</div>' +
+                '<div class="min-w-0">' +
+                    '<div class="text-sm font-semibold truncate">' + esc(b.backupId || 'backup') + '</div>' +
+                    '<div class="text-xs text-dark-400 mt-0.5">' + esc(dateStr) + ' · ' + fmtBytes(b.totalSize || 0) + (b.totalChunks ? ' · ' + b.totalChunks + ' chunks' : '') + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="flex items-center gap-2 flex-shrink-0">' +
+                '<span class="tag-pill" style="color:' + statusColor + ';border-color:' + statusColor + '30;">' + statusText + '</span>' +
+                '<button onclick="restoreBackup(\'' + esc(s._id) + '\',\'' + esc(b.backupId) + '\')" class="btn-ghost text-xs py-1.5 px-3" title="Restore this backup">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> Restore' +
+                '</button>' +
+                '<button onclick="deleteBackup(\'' + esc(s._id) + '\',\'' + esc(b.backupId) + '\')" class="btn-ghost text-xs py-1.5 px-3" style="color:#ef4444;" title="Delete this backup">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Delete' +
+                '</button>' +
+            '</div>' +
+        '</div>';
+    });
+    listEl.innerHTML = html;
+}
+
+function triggerBackupNow() {
+    var s = getSelServer('sbServerSelect');
+    if (!s) { showToast('Select a server first', true); return; }
+    if (!isServerOnline(s)) { showToast('Server is offline — cannot backup now', true); return; }
+    pushCommand(s, { action: 'backup_db', appId: '', username: '', password: '' },
+        'Backup command sent to "' + (s.name || 'server') + '" — this may take a moment');
+}
+
+function restoreBackup(docId, backupId) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s || !backupId) return;
+    if (!isServerOnline(s)) { showToast('Server is offline — cannot restore', true); return; }
+    if (!window.confirm('⚠️ RESTORE BACKUP\n\nServer: ' + (s.name || docId) + '\nBackup: ' + backupId + '\n\nThis will REPLACE the current database with the backup data.\nThe server will RESTART automatically.\n\nContinue?')) return;
+    pushCommand(s, { action: 'restore_backup', backupId: backupId, appId: '', username: '', password: '' },
+        'Restore command sent to "' + (s.name || 'server') + '" — server will restart');
+}
+
+function deleteBackup(docId, backupId) {
+    var s = serversCache.find(function(x) { return x._id === docId; });
+    if (!s || !backupId) return;
+    if (!window.confirm('Delete backup "' + backupId + '"?\n\nThis cannot be undone.')) return;
+    pushCommand(s, { action: 'delete_backup', backupId: backupId, appId: '', username: '', password: '' },
+        'Delete command sent to "' + (s.name || 'server') + '"');
+}
+
+function toggleAutoBackup() {
+    var s = getSelServer('sbServerSelect');
+    if (!s) { showToast('Select a server first', true); return; }
+    var autoOn = document.getElementById('sbAutoBackup').checked;
+    pushCommand(s, { action: 'set_auto_backup', enabled: autoOn, appId: '', username: '', password: '' },
+        'Auto backup ' + (autoOn ? 'ENABLED' : 'DISABLED') + ' on "' + (s.name || 'server') + '"');
 }
 
 // --- Remote app management commands ---
